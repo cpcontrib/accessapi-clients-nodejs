@@ -56,9 +56,9 @@ exports.logout = function (callback) {
   return restPost('/auth/logout', null, callback);
 }
 
-exports.AssetExists = function (path, callback) {
+exports.AssetExists = function (assetIdOrPath, callback) {
   var body = {
-    "assetIdOrPath" : path
+    "assetIdOrPath" : assetIdOrPath
   };
   return restPost('/asset/Exists', body, callback);
 }
