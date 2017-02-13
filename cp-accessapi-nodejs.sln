@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.40629.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "cp-accessapi-nodejs", "cp-accessapi-nodejs.njsproj", "{1E9B0C97-3307-43A9-BFAD-E7C0E47CC5A0}"
+EndProject
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "cp-accessapi-nodejs-cli", "..\cp-accessapi-nodejs-cli\cp-accessapi-nodejs-cli.njsproj", "{A7F56352-F443-49A6-99DA-C8D7AE3B842C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1E9B0C97-3307-43A9-BFAD-E7C0E47CC5A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E9B0C97-3307-43A9-BFAD-E7C0E47CC5A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E9B0C97-3307-43A9-BFAD-E7C0E47CC5A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E9B0C97-3307-43A9-BFAD-E7C0E47CC5A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7F56352-F443-49A6-99DA-C8D7AE3B842C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7F56352-F443-49A6-99DA-C8D7AE3B842C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7F56352-F443-49A6-99DA-C8D7AE3B842C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7F56352-F443-49A6-99DA-C8D7AE3B842C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
