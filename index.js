@@ -36,42 +36,53 @@ var options = {
 };
 
 exports.auth = function (callback) {
-  var body = { "instance": instance, "username": username, "password": password, "remember_me": false, "timeZoneOffsetMinutes": -480 };
+  var body = {
+    "instance": instance, 
+    "username": username, 
+    "password": password, 
+    "remember_me": false, 
+    "timeZoneOffsetMinutes": -480
+  };
   return restPost('/auth/authenticate', body, callback);
 }
 
-exports.logout = function (callback) {  
+exports.logout = function (callback) {
   return restPost('/auth/logout', null, callback);
 }
 
 exports.AssetExists = function (path, callback) {
-  var body = { "assetIdOrPath": path };
+  var body = {
+    "assetIdOrPath" : path
+  };
   return restPost('/asset/Exists', body, callback);
 }
 
 exports.AssetUpload = function (newName, folderId, modelId, workflowId, bytes, callback) {
-  var body = { "newName": newName,
-               "destinationFolderId": folderId,
-               "modelId": modelId,
-               "workflowId": workflowId,
-               "bytes": bytes };
-  if (folderId == 0 || folderId == undefined) return callback('not allowed to import to root');               
+  var body = {
+    "newName": newName,
+    "destinationFolderId": folderId,
+    "modelId": modelId,
+    "workflowId": workflowId,
+    "bytes": bytes
+  };
+  if (folderId == 0 || folderId == undefined) return callback('not allowed to import to root');
   return restPost('/asset/Upload', body, callback);
 }
 
 exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLanguage, templateId, workflowId, callback) {
-  var body = { "newName": newName,
-  "destinationFolderId": folderId,
-  "modelId": modelId,
-  "type": type,
-  "devTemplateLanguage": devTemplateLanguage,
-  "templateId": templateId,
-  "workflowId": workflowId }  
-  if (folderId == 0 || folderId == undefined)
-  {
+  var body = {
+    "newName": newName,
+    "destinationFolderId": folderId,
+    "modelId": modelId,
+    "type": type,
+    "devTemplateLanguage": devTemplateLanguage,
+    "templateId": templateId,
+    "workflowId": workflowId
+  }
+  if (folderId == 0 || folderId == undefined) {
     console.log('create asset error, folderId = ' + folderId);
-    return callback('not allowed to import to root');  
-  } 
+    return callback('not allowed to import to root');
+  }
   return restPost('/asset/Create', body, callback);
 }
 
@@ -90,14 +101,15 @@ function restPost(url, body, callback) {
       //'Accept-Encoding': 'gzip, deflate '
     }
   }
-
+  
   requestify.request(url, options).then(function (resp) {
-      processCookies(resp);
-      callback(JSON.parse(resp.body));
-    }, function (err) {
-      //todo: handle http 429, rate limiting busy, retry-after
-      callback(JSON.parse(err.body));
-    });
+    processCookies(resp);
+    callback(JSON.parse(resp.body));
+  }, function (err) {
+    //todo: handle http 429, rate limiting busy, retry-after
+    console.log('request.err=%o', err);
+    callback(JSON.parse(err.body));
+  });
 }
 
 //handles cookies between http calls
