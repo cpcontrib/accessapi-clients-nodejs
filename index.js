@@ -130,6 +130,7 @@ function restPost(url, body, callback) {
   options.headers = {
     'x-api-key': opts.apikey,
     'Content-Type': 'application/json; charset=utf8',
+    'Accept': 'application/json',
     //'Accept-Encoding': 'gzip, deflate '
   };
 
