@@ -1,6 +1,7 @@
 var requestify = require('requestify');
 var colors = require('colors');
 var fs = require('fs');
+var Q = require('q');
 
 var opts = {
   "apikey": "",
@@ -63,7 +64,7 @@ exports.AssetExists = function (assetIdOrPath, callback) {
   return restPost('/asset/Exists', body, callback);
 }
 
-exports.AssetUpdate = function (assetId, fields, fieldsToDelete, callback, runPostInput, runPostSave) {
+exports.AssetUpdate = function (assetId, fields, fieldsToDelete, runPostInput, runPostSave) {
   var body = {
     "assetId" : assetId,
     "fields": fields,
@@ -76,7 +77,7 @@ exports.AssetUpdate = function (assetId, fields, fieldsToDelete, callback, runPo
   if (runPostSave !== undefined)
     body["runPostSave"] = runPostSave;
   
-  return restPost('/asset/Update', body, callback);
+  return restPost('/asset/Update', body, arguments[arguments.length - 1]);
 }
 
 exports.AssetUpload = function (newName, folderId, modelId, workflowId, bytes, callback) {
@@ -117,7 +118,9 @@ exports.setConfig = function (config) {
 }
 
 //main http call
-function restPost(url, body, callback) {
+function restPost(url, body) {
+  var deferred = Q.defer();
+  
   url = baseURL(opts) + url;
   
   console.log("calling: ".yellow.bold + url.green.bold);
@@ -141,12 +144,19 @@ function restPost(url, body, callback) {
   //console.log('sending request', options);
   requestify.request(url, options).then(function (resp) {
     processCookies(resp);
-    callback(JSON.parse(resp.body));
+    try { resp.json = JSON.parse(resp.body); } catch(ex) { }
+    deferred.resolve(resp);
   }, function (err) {
     //todo: handle http 429, rate limiting busy, retry-after
     console.log('request.err=%o', err);
-    callback(JSON.parse(err.body));
+    deferred.reject(JSON.parse(err.body));
   });
+  
+  
+  var cbarg = arguments[arguments.length - 1];
+  if (typeof cbarg === 'function') try { return deferred.promise.nodeify(cbarg); } catch(ex) { console.log('restPost cbarg failure: ', ex); }
+
+  return deferred.promise;
 }
 
 //handles cookies between http calls
