@@ -92,6 +92,14 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
   return restPost('/asset/Create', body, callback);
 }
 
+exports.setConfig = function (config) {
+  for (var k in config) {
+    //console.log('k=%s', k, config[k]);
+    opts[k] = config[k];
+		//console.log('opts[\'%s\'] = %s', k, opts[k]);
+  }
+}
+
 //main http call
 function restPost(url, body, callback) {
   url = baseURL(opts) + url;
