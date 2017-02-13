@@ -1,5 +1,4 @@
 var requestify = require('requestify');
-var prompt = require('sync-prompt').prompt;
 var colors = require('colors');
 var fs = require('fs');
 
@@ -22,10 +21,6 @@ if (fs.existsSync('config.json')) {
   console.log('domain: ' + config.server);
   console.log('username: ' + config.username);
 }
-
-var hidden = true;
-//prompt user for password
-if (password.length == 0) password = prompt('Password: ', hidden);
 
 var baseURL = domain + '/' + instance + '/cpt_webservice/accessapi';
 
