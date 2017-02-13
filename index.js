@@ -2,12 +2,15 @@ var requestify = require('requestify');
 var colors = require('colors');
 var fs = require('fs');
 
-var apikey = "";
-var domain = '';
-var instance = '';
+var opts = {
+  "apikey": "",
+  domain: '',
+  instance: '',
+  username: '',
+  password: ''
+};
+
 var cookies = null;
-var username = '';
-var password = '';
 
 //read a json file with configuration fields, so we don't have to hard code them
 if (fs.existsSync('config.json')) {
@@ -20,16 +23,19 @@ if (fs.existsSync('config.json')) {
   console.log('instance: ' + config.instance);
   console.log('domain: ' + config.server);
   console.log('username: ' + config.username);
+  opts = config;
 }
 
-var baseURL = domain + '/' + instance + '/cpt_webservice/accessapi';
+baseURL = function (opts) {
+  return 'https://' + opts.domain + '/' + opts.instance + '/cpt_webservice/accessapi';
+}
 
 //setup http headers
 var options = {
   body: '',
   method: 'POST',
   headers: {
-    'x-api-key': apikey,
+    'x-api-key': opts.apikey,
     'Content-Type': 'application/json; charset=utf8',
     //'Accept-Encoding': 'gzip, deflate '
   }
@@ -37,9 +43,9 @@ var options = {
 
 exports.auth = function (callback) {
   var body = {
-    "instance": instance, 
-    "username": username, 
-    "password": password, 
+    "instance": opts.instance, 
+    "username": opts.username, 
+    "password": opts.password, 
     "remember_me": false, 
     "timeZoneOffsetMinutes": -480
   };
@@ -88,14 +94,16 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
 
 //main http call
 function restPost(url, body, callback) {
-  url = baseURL + url;
+  url = baseURL(opts) + url;
+  
   console.log("calling: ".yellow.bold + url.green.bold);
+  console.log("body:", JSON.stringify(body));
   options.body = body;
   //check if we need pass the cookies
   if (cookies != null) {
     // todo: try to reuse headers from above.
     options.headers = {
-      'x-api-key': apikey,
+      'x-api-key': opts.apikey,
       'Content-Type': 'application/json; charset=utf8',
       'Cookie': cookies
       //'Accept-Encoding': 'gzip, deflate '
