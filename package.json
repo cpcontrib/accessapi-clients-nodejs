@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/ericnewton76/cp-accessapi-nodejs/issues"
   },
-  "homepage": "https://github.com/ericnewton76/cp-accessapi-nodejs#readme"
+  "homepage": "https://github.com/ericnewton76/cp-accessapi-nodejs#readme",
+  "dependencies": {
+    "promise": "^7.1.1",
+    "requestify": "^0.2.5"
+  }
 }
