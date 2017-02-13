@@ -63,6 +63,22 @@ exports.AssetExists = function (path, callback) {
   return restPost('/asset/Exists', body, callback);
 }
 
+exports.AssetUpdate = function (assetId, fields, fieldsToDelete, callback, runPostInput, runPostSave) {
+  var body = {
+    "assetId" : assetId,
+    "fields": fields,
+    "fieldsToDelete": fieldsToDelete
+  };
+  
+  if (runPostInput !== undefined)
+    body["runPostInput"] = runPostInput;
+  
+  if (runPostSave !== undefined)
+    body["runPostSave"] = runPostSave;
+  
+  return restPost('/asset/Update', body, callback);
+}
+
 exports.AssetUpload = function (newName, folderId, modelId, workflowId, bytes, callback) {
   var body = {
     "newName": newName,
