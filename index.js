@@ -122,18 +122,22 @@ function restPost(url, body, callback) {
   
   console.log("calling: ".yellow.bold + url.green.bold);
   console.log("body:", JSON.stringify(body));
+  console.log("opts in restPost: %o", opts);
+
   options.body = body;
   //check if we need pass the cookies
+  
+  options.headers = {
+    'x-api-key': opts.apikey,
+    'Content-Type': 'application/json; charset=utf8',
+    //'Accept-Encoding': 'gzip, deflate '
+  };
+
   if (cookies != null) {
     // todo: try to reuse headers from above.
-    options.headers = {
-      'x-api-key': opts.apikey,
-      'Content-Type': 'application/json; charset=utf8',
-      'Cookie': cookies
-      //'Accept-Encoding': 'gzip, deflate '
-    }
+    options.headers['Cookie'] = cookies
   }
-  
+  //console.log('sending request', options);
   requestify.request(url, options).then(function (resp) {
     processCookies(resp);
     callback(JSON.parse(resp.body));
