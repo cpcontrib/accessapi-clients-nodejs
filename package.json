@@ -21,6 +21,7 @@
   },
   "homepage": "https://github.com/ericnewton76/cp-accessapi-nodejs#readme",
   "dependencies": {
+    "log4js": "^1.1.0",
     "promise": "^7.1.1",
     "q": "^1.4.1",
     "requestify": "^0.2.5"

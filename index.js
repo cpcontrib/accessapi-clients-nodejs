@@ -1,7 +1,25 @@
 var requestify = require('requestify');
-var colors = require('colors');
 var fs = require('fs');
 var Q = require('q');
+var log4js = require('log4js');
+
+var log = log4js.getLogger('crownpeak-accessapi');
+
+// if (fs.existsSync('./log4js.json')) {
+//   log4js.configure('./log4js.json');
+// } else if(process.env.LOG4JS_CONFIG !== undefined) {
+//   //do nothing, log4js configures based on this
+// } else {
+//   log4js.configure({
+//     appenders: [
+//       { 
+//         type: 'console', 
+//         layout: { type: 'pattern', pattern: '%d{ABSOLUTE} %c%[%-5p%] %m%n'}
+//       }
+//     ]
+//   })
+//   //log.setLevel(log4js.levels.OFF);//default, dont show any
+// }
 
 var opts = {
   "apikey": "",
@@ -15,15 +33,15 @@ var cookies = null;
 
 //read a json file with configuration fields, so we don't have to hard code them
 if (fs.existsSync('config.json')) {
-  console.log('reading config.json'.yellow.bold);
+  log.info('reading config.json');
   var config = JSON.parse(fs.readFileSync('config.json', { "encoding": "utf8" }));
   instance = config.instance;
   domain = config.server;
   apikey = config.accessKey;
   username = config.username;
-  console.log('instance: ' + config.instance);
-  console.log('domain: ' + config.server);
-  console.log('username: ' + config.username);
+  if (log.isDebugEnabled) {
+    log.debug('config', config);
+  }
   opts = config;
 }
 
@@ -43,6 +61,7 @@ var options = {
 };
 
 exports.auth = function (callback) {
+  
   var body = {
     "instance": opts.instance, 
     "username": opts.username, 
@@ -50,6 +69,7 @@ exports.auth = function (callback) {
     "remember_me": false, 
     "timeZoneOffsetMinutes": -480
   };
+  
   return restPost('/auth/authenticate', body, callback);
 }
 
@@ -103,7 +123,7 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
     "workflowId": workflowId
   }
   if (folderId == 0 || folderId == undefined) {
-    console.log('create asset error, folderId = ' + folderId);
+    log.fatal('create asset error, folderId=%d', folderId);
     return callback('not allowed to import to root');
   }
   return restPost('/asset/Create', body, callback);
@@ -111,9 +131,7 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
 
 exports.setConfig = function (config) {
   for (var k in config) {
-    //console.log('k=%s', k, config[k]);
     opts[k] = config[k];
-		//console.log('opts[\'%s\'] = %s', k, opts[k]);
   }
 }
 
@@ -123,9 +141,11 @@ function restPost(url, body) {
   
   url = baseURL(opts) + url;
   
-  console.log("calling: ".yellow.bold + url.green.bold);
-  console.log("body:", JSON.stringify(body));
-  console.log("opts in restPost: %o", opts);
+  log.info("calling: %s", url);
+  if (log.isDebugEnabled) {
+    log.debug("body:", JSON.stringify(body));
+    log.debug("opts:", opts);
+  }
 
   options.body = body;
   //check if we need pass the cookies
@@ -141,20 +161,22 @@ function restPost(url, body) {
     // todo: try to reuse headers from above.
     options.headers['Cookie'] = cookies
   }
-  //console.log('sending request', options);
+  
+  if (log.isDebugEnabled) log.debug('sending request', options);
+  
   requestify.request(url, options).then(function (resp) {
     processCookies(resp);
     try { resp.json = JSON.parse(resp.body); } catch(ex) { }
     deferred.resolve(resp);
   }, function (err) {
     //todo: handle http 429, rate limiting busy, retry-after
-    console.log('request.err=%o', err);
+    log.error('received error response:', err);
     deferred.reject(JSON.parse(err.body));
   });
   
   
   var cbarg = arguments[arguments.length - 1];
-  if (typeof cbarg === 'function') try { return deferred.promise.nodeify(cbarg); } catch(ex) { console.log('restPost cbarg failure: ', ex); }
+  if (typeof cbarg === 'function') try { return deferred.promise.nodeify(cbarg); } catch(ex) { log.warn('restPost cbarg failure: ', ex); }
 
   return deferred.promise;
 }
@@ -162,12 +184,12 @@ function restPost(url, body) {
 //handles cookies between http calls
 function processCookies(resp, callback) {
   if (resp.headers['set-cookie'] != null) {
+    log.debug('processing cookies');
     var cooks = resp.headers['set-cookie'];
     var newCookies = '';
     var cookieCount = 0;
     cooks.forEach(function (cookie) {
       var parts = cookie.split(';');
-      //console.log(parts);
       if (cookieCount++ > 0) {
         newCookies += "; ";
       }
