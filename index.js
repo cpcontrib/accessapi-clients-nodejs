@@ -84,18 +84,19 @@ exports.AssetExists = function (assetIdOrPath, callback) {
   return restPost('/asset/Exists', body, callback);
 }
 
-exports.AssetUpdate = function (assetId, fields, fieldsToDelete, runPostInput, runPostSave) {
+exports.AssetUpdate = function (assetId, fields, fieldsToDelete, options) {
   var body = {
     "assetId" : assetId,
     "fields": fields,
     "fieldsToDelete": fieldsToDelete
   };
   
-  if (runPostInput !== undefined)
-    body["runPostInput"] = runPostInput;
+  options = options || {};
+  if (options.runPostInput !== undefined)
+    body["runPostInput"] = options.runPostInput;
   
-  if (runPostSave !== undefined)
-    body["runPostSave"] = runPostSave;
+  if (options.runPostSave !== undefined)
+    body["runPostSave"] = options.runPostSave;
   
   return restPost('/asset/Update', body, arguments[arguments.length - 1]);
 }
