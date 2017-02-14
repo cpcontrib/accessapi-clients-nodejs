@@ -198,3 +198,5 @@ function processCookies(resp, callback) {
     cookies = newCookies;
   }
 }
+
+exports.logger = log;
