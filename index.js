@@ -60,8 +60,24 @@ var options = {
   }
 };
 
+function checkConfig() {
+  if (opts.instance === '' || opts.instance == undefined) {
+    throw new Error("config not set.  use setConfig before calling api functions.");
+  }
+}
+
+exports.loadConfig = function(file) {
+  if (file === undefined) {
+    file = "./accessapi-config.json";
+  }
+  var accessapiConfig = JSON.parse(fs.readFileSync(file));
+  return accessapiConfig;
+}
+
 exports.auth = function (callback) {
   
+  checkConfig();
+
   var body = {
     "instance": opts.instance, 
     "username": opts.username, 
