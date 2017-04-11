@@ -2,6 +2,7 @@ var requestify = require('requestify');
 var fs = require('fs');
 var Q = require('q');
 var log4js = require('log4js');
+var util = require('util');
 
 var log = log4js.getLogger('crownpeak-accessapi');
 
@@ -66,12 +67,34 @@ function checkConfig() {
   }
 }
 
-exports.loadConfig = function(file) {
-  if (file === undefined) {
-    file = "./accessapi-config.json";
+exports.loadConfig = function(loadOpts) {
+  loadOpts = loadOpts || {};
+  if (loadOpts["file"] === undefined) {
+    loadOpts["file"] = "./accessapi-config.json";
   }
-  var accessapiConfig = JSON.parse(fs.readFileSync(file));
-  return accessapiConfig;
+
+  var accessapiConfig = JSON.parse(fs.readFileSync(loadOpts["file"]));;
+
+  if (Array.isArray(accessapiConfig)) {
+    if (loadOpts["instance"] === undefined) {
+      accessapiConfig = accessapiConfig[0];
+    } else {
+      var found = accessapiConfig.find(function(item,index) {
+        if (item["instance"] !== undefined && item["instance"] === loadOpts["instance"]) {
+          return true;
+        }
+      });
+
+      if (found !== undefined) {
+        accessapiConfig = found;
+      }
+      throw new Error(util.format("failed to find instance '{0}' declared in '{1}'.", loadOpts["instance"], loadOpts["file"]));
+    }
+
+  }
+
+  setConfig(accessapiConfig);
+  return opts;
 }
 
 exports.auth = function (callback) {
@@ -146,11 +169,12 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
   return restPost('/asset/Create', body, callback);
 }
 
-exports.setConfig = function (config) {
+function setConfig(config) {
   for (var k in config) {
     opts[k] = config[k];
   }
 }
+exports.setConfig = setConfig;
 
 //main http call
 function restPost(url, body) {
