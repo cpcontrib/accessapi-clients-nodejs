@@ -169,6 +169,18 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
   return restPost('/asset/Create', body, callback);
 }
 
+exports.AssetPaged = function (AssetPagedRequest, callback) {
+  var body = AssetPagedRequest || {};
+  
+  return restPost('/asset/Paged', body, callback);
+}
+
+exports.AssetRoute = function (AssetRouteRequest, callback) {
+  var body = AssetRouteRequest || {};
+  
+  return restPost('/asset/Route', body, callback);
+}
+
 function setConfig(config) {
   for (var k in config) {
     opts[k] = config[k];
