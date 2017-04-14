@@ -7,34 +7,15 @@ var util = require('util');
 var chalk = require('chalk');
 var Q = require('q');
 
-var log = require('./cli_logger');
+var cli_util = require('./cli_util');
+var log = cli_util.createLogger();
 
-process.on('exit', () => { process.exit(0); })
-
-
+//process.on('exit', () => { process.exit(0); })
 
 var constants = {
   configJsonName: "accessapi-config.json"
 };
 
-function status(text) {
-  var argsArray = Array.prototype.slice.call(arguments);
-  log.info.apply(log, argsArray);
-  if (log.isInfoEnabled==false) {
-    var str = util.format.apply(null,argsArray);
-    process.stdout.write(str);
-    process.stdout.write('\n');
-  }
-}
-function fail(text) {
-  var argsArray = Array.prototype.slice.call(arguments);
-  log.fatal.apply(log, argsArray);
-  if (log.isFatalEnabled==false) {
-    var str = util.format.apply(null,argsArray);
-    process.stderr.write(str);
-    process.stderr.write('\n');
-  }
-}
 
 program
   .name('list')
@@ -97,7 +78,8 @@ function formatRawJson(program,assets,console) {
   console.log(JSON.stringify(assets,null,'  '));
 }
 function formatCrownpeakList(program,assets,console) {
-  console.log(util.format(' Directory of %s', program.assetPath));
+
+  console.log(util.format('  Directory of %s', program.assetPath));
   console.log('');
               
   for(var i=0; i < assets.length; i++) {
@@ -146,7 +128,7 @@ function getFormatter(program) {
 
 main = function() {
 
-    status("Routing '%s' to status '%s'.", program.assetPath, program.workflowStatus);    
+    cli_util.status("Listing contents of '%s'.", program.assetPath);    
 
     var accessapi = require('../index');
 
@@ -162,11 +144,11 @@ main = function() {
         var resp = resp2.json;
         
         if(resp.exists !== true) {
-            fail("folder '%s' was not found.", program.assetPath);
+            cli_util.fail("folder '%s' was not found.", program.assetPath);
             process.exit(1);
         }
 
-        accessapi.AssetPaged({"assetId":resp.assetId}).then((resp2)=>{
+        accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":200}).then((resp2)=>{
             var resp = resp2.json;
             var formatter = getFormatter(program);
 

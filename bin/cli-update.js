@@ -7,32 +7,14 @@ var util = require('util');
 var chalk = require('chalk');
 var Q = require('q');
 
-var log = require('./cli_logger');
+var cli_util = require('./cli_util');
+var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
 var constants = {
   configJsonName: "accessapi-config.json"
 };
-
-function status(text) {
-  var argsArray = Array.prototype.slice.call(arguments);
-  log.info.apply(log, argsArray);
-  if (log.isInfoEnabled==false) {
-    var str = util.format.apply(null,argsArray);
-    process.stdout.write(str);
-    process.stdout.write('\n');
-  }
-}
-function fail(text) {
-  var argsArray = Array.prototype.slice.call(arguments);
-  log.fatal.apply(log, argsArray);
-  if (log.isFatalEnabled==false) {
-    var str = util.format.apply(null,argsArray);
-    process.stderr.write(str);
-    process.stderr.write('\n');
-  }
-}
 
 program
   .name('update')
@@ -137,7 +119,7 @@ function getContentObject (program, encoding) {
 
   } else { //read from file
     
-    fail('field not set.');
+    cli_util.fail('field not set.');
   }
 
   
@@ -150,12 +132,12 @@ main = function () {
 var exitcode=-1;
 
   if (typeof program.assetPath === 'undefined') {
-    fail('no assetPath specified.');
+    cli_util.fail('no assetPath specified.');
     exitcode=1;
   }
 
   if (program.inputFile == undefined && program.field == undefined && program.stdin == undefined) {
-    fail('no inputFile specified and --stdin not specified.  Cannot update.');
+    cli_util.fail('no inputFile specified and --stdin not specified.  Cannot update.');
     exitcode=1;
   }
 
@@ -163,7 +145,7 @@ var exitcode=-1;
   
   log.debug('Loading config from %s.', program.config);
   if (fs.existsSync(program.config)==false) {
-    fail('Failed to load config from %s: file doesn\'t exist.', program.config);
+    cli_util.fail('Failed to load config from %s: file doesn\'t exist.', program.config);
     process.exit(1); 
   }
 
@@ -172,14 +154,14 @@ var exitcode=-1;
   
   log.debug('accessapiConfig:', accessapiConfig);
 
-  status(`Instance: ${accessapiConfig.instance}   Sign in as: ${accessapiConfig.username}`);
-  status(`Updating: ${program.assetPath}`);
+  cli_util.status(`Instance: ${accessapiConfig.instance}   Sign in as: ${accessapiConfig.username}`);
+  cli_util.status(`Updating: ${program.assetPath}`);
   
   var accessapi = require('../index');
   accessapi.setConfig(accessapiConfig);
   
-  status('');
-  status('Authenticating.');
+  cli_util.status('');
+  cli_util.status('Authenticating.');
   accessapi.auth().then(function (data) {
     
     var assetIdOrPath = program.assetPath;
@@ -205,7 +187,7 @@ var exitcode=-1;
 
         log.debug('calling AssetUpdate. options=%j', options);
         accessapi.AssetUpdate(workflowAssetId, contentObject, null, options).then(function() {
-          status('Success updating %s.', program.assetPath);
+          cli_util.status('Success updating %s.', program.assetPath);
         })
 
       });
@@ -213,7 +195,7 @@ var exitcode=-1;
     });
 
   }, function(err) {
-    fail('Authentication failure: %s', err.resultCode);
+    cli_util.fail('Authentication failure: %s', err.resultCode);
   }).catch(function (err) {
     log.error("error occurred:", err);
   }).done();
