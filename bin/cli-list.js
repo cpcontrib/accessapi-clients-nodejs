@@ -164,7 +164,7 @@ main = function() {
 
     status("Routing '%s' to status '%s'.", program.assetPath, program.workflowStatus);    
 
-    var accessapi = require('crownpeak-accessapi');
+    var accessapi = require('../index');
 
     var loadConfigOpts = {};
     loadConfigOpts.file = program.config;

@@ -193,7 +193,7 @@ var exitcode=-1;
   status(`Instance: ${accessapiConfig.instance}   Sign in as: ${accessapiConfig.username}`);
   status(`Updating: ${program.assetPath}`);
   
-  var accessapi = require('crownpeak-accessapi');
+  var accessapi = require('../index');
   accessapi.setConfig(accessapiConfig);
   
   status('');
