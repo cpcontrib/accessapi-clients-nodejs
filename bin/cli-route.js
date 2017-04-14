@@ -6,28 +6,10 @@ var fs = require('fs');
 var util = require('util');
 var chalk = require('chalk');
 var Q = require('q');
-var log4js = require('log4js');
 
-var log = log4js.getLogger();
+var log = require('./cli_logger');
 
 process.on('exit', () => { process.exit(0); })
-
-if (fs.existsSync('./log4js.json')) {
-  log4js.configure('./log4js.json');
-} else if(process.env["LOG4JS_CONFIG"] !== undefined) {
-
-} else {
-  log4js.configure({
-    appenders: [
-      { 
-        type: 'console' , 
-        level: 'INFO', 
-        layout: { type:"pattern", pattern: " %[%m%]" } 
-      },
-    ]
-  })
-  log.setLevel('INFO');
-}
 
 var constants = {
   configJsonName: "accessapi-config.json"
