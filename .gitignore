@@ -39,3 +39,6 @@ jspm_packages
 # Nod.js Tools for Visual Studio
 .ntvs_analysis.dat
 *.suo
+
+accessapi-config.json 
+**/obj/* 
