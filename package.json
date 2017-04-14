@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/ericnewton76/cp-accessapi-nodejs-cli#readme",
   "bin": {
-    "crownpeak": "./index.js"
+    "crownpeak": "./bin/cli.js"
   },
   "dependencies": {
     "chalk": "^1.1.3",
