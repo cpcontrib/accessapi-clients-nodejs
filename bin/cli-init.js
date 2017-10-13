@@ -10,6 +10,7 @@ var constants = {
 };
 
 program
+  .name('init')
   .parse(process.argv)
   
 console.log('Initialize a %s', constants.configJsonName);

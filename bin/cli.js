@@ -6,6 +6,7 @@ process.stdout.write("\n");
 process.stdout.write("Crownpeak CLI starting.\n");
 
 program
+  .name('crownpeak')
   .version('0.1.0')
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
