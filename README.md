@@ -26,4 +26,4 @@ Current set of commands available in NodeJS via require('crownpeak-accessapi')
 - AssetPaged
 - AssetRoute
 
-See [wiki](https://github.com/crownpeak-contrib/accessapi-clients/wiki) for more information
+See [wiki](https://github.com/crownpeak-contrib/accessapi-clients-nodejs/wiki) for more information
