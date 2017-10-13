@@ -51,19 +51,25 @@ var properties = [
   }
   ,{
     name: 'username'
-    ,message: '(optional) Username to use to access'
+    ,message: 'Username to use to access. Leave blank for OS password chain support.'
     ,default: currentValues.username
   }
   ,{
     name: 'password'
     ,hidden: true
     ,replace: '*'
-    ,message: '(optional) Password to use to access'
-    ,default: currentValues.password
-    ,ask: function() {
-      //only ask if the username was entered.
-      return prompt.history('username').value > 0;
-    }
+    ,message: 'Password to use to access (stored in OS keychain)'
+    //,ask: function() {
+    //  ////only ask if the username was entered.
+    //  //return prompt.history('username').value > 0;
+    //}
+  }
+];
+var testOptions = [
+  {
+    name: 'test_options'
+    ,message: 'Test these options against webservice?'
+    ,validator: /[y|n]/
   }
 ];
 
@@ -72,15 +78,36 @@ prompt.start();
 prompt.get(properties, function(err,result) {
   if(err) { return onErr(err); }
   
-  result["cms-instance-url"] = "https://" + result["domain"] + "/" + result["instance"];
+  result["cms_instance_url"] = "https://" + result["domain"] + "/" + result["instance"];
   
-  console.log('options:');
-  console.log(result);
+  new Promise((resolve,reject)=>{
 
-  fs.writeFileSync('./' + constants.configJsonName, JSON.stringify(result,null,2), 'utf-8');
-  
-  console.log();
-  console.log('Wrote answers to %s', constants.configJsonName);
+    const keytar = require('keytar');
+    keytar.setPassword('Crownpeak-AccessAPI-NodeJS',result["username"]+'@'+result["instance"],result["password"]).then(()=>{
+      console.log('Stored password into OS keychain.');
+      resolve();
+    })
+
+  }).then(()=> {
+
+    delete result["password"];
+
+    console.log('options:');
+    console.log(JSON.stringify(result,null,2));
+
+    console.log();
+    prompt.get(testOptions, (err,testresult)=>{
+      if(testresult["test_options"] === 'y') {
+        console.log('not implemented yet');
+      }
+    
+      fs.writeFileSync('./' + constants.configJsonName, JSON.stringify(result,null,2), 'utf-8');
+      console.log();
+      console.log('Wrote answers to %s', constants.configJsonName);
+      
+    })
+
+  })
 
 });
 

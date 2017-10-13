@@ -1,8 +1,8 @@
 var requestify = require('requestify');
 var fs = require('fs');
-var Q = require('q');
 var log4js = require('log4js');
 var util = require('util');
+var keytar = require('keytar');
 
 var log = log4js.getLogger('crownpeak-accessapi');
 
@@ -99,17 +99,36 @@ exports.loadConfig = function(loadOpts) {
 
 exports.auth = function (callback) {
   
-  checkConfig();
+  return new Promise(function(resolve,reject) {
 
-  var body = {
-    "instance": opts.instance, 
-    "username": opts.username, 
-    "password": opts.password, 
-    "remember_me": false, 
-    "timeZoneOffsetMinutes": -480
-  };
-  
-  return restPost('/auth/authenticate', body, callback);
+    var password = null;
+
+    new Promise(function(resolve2,reject2) {
+      if(opts.password === undefined || opts.password === '') {
+
+        keytar.getPassword('Crownpeak-AccessAPI-NodeJS',opts["username"]+"@"+opts["instance"]).then((returnedPass) => {
+          resolve2(returnedPass)
+        }, (reason) => {
+          console.log('fail to retrieve password');
+          reject2(reason);
+        })
+        
+      }
+    }).then((password)=>{
+
+      var body = {
+        "instance": opts.instance, 
+        "username": opts.username, 
+        "password": password, 
+        "remember_me": false, 
+        "timeZoneOffsetMinutes": -480
+      };
+
+      var restPostPromise = restPost('/auth/authenticate', body, callback);
+      return resolve(restPostPromise);
+    
+    })
+  })
 }
 
 exports.logout = function (callback) {
@@ -190,48 +209,49 @@ exports.setConfig = setConfig;
 
 //main http call
 function restPost(url, body) {
-  var deferred = Q.defer();
   
-  url = baseURL(opts) + url;
-  
-  log.info("calling: %s", url);
-  if (log.isDebugEnabled) {
-    log.debug("body:", JSON.stringify(body));
-    log.debug("opts:", opts);
-  }
+  return new Promise((resolve,reject) => {
 
-  options.body = body;
-  //check if we need pass the cookies
-  
-  options.headers = {
-    'x-api-key': opts.apikey,
-    'Content-Type': 'application/json; charset=utf8',
-    'Accept': 'application/json',
-    //'Accept-Encoding': 'gzip, deflate '
-  };
+    url = baseURL(opts) + url;
+    
+    log.info("calling: %s", url);
+    if (log.isDebugEnabled) {
+      log.debug("body:", JSON.stringify(body));
+      log.debug("opts:", opts);
+    }
 
-  if (cookies != null) {
-    // todo: try to reuse headers from above.
-    options.headers['Cookie'] = cookies
-  }
-  
-  if (log.isDebugEnabled) log.debug('sending request', options);
-  
-  requestify.request(url, options).then(function (resp) {
-    processCookies(resp);
-    try { resp.json = JSON.parse(resp.body); } catch(ex) { }
-    deferred.resolve(resp);
-  }, function (err) {
-    //todo: handle http 429, rate limiting busy, retry-after
-    log.error('received error response:', err);
-    deferred.reject(JSON.parse(err.body));
+    options.body = body;
+    //check if we need pass the cookies
+    
+    options.headers = {
+      'x-api-key': opts.apikey,
+      'Content-Type': 'application/json; charset=utf8',
+      'Accept': 'application/json',
+      //'Accept-Encoding': 'gzip, deflate '
+    };
+
+    if (cookies != null) {
+      // todo: try to reuse headers from above.
+      options.headers['Cookie'] = cookies
+    }
+    
+    if (log.isDebugEnabled) log.debug('sending request', options);
+    
+    requestify.request(url, options).then(function (resp) {
+      processCookies(resp);
+      try { resp.json = JSON.parse(resp.body); } catch(ex) { }
+      resolve(resp);
+    }, (err) => {
+      //todo: handle http 429, rate limiting busy, retry-after
+      log.error('received error response:', err);
+      reject(JSON.parse(err.body));
+    });
+    
+    
+    //var cbarg = arguments[arguments.length - 1];
+    //if (typeof cbarg === 'function') try { return deferred.promise.nodeify(cbarg); } catch(ex) { log.warn('restPost cbarg failure: ', ex); }
+
   });
-  
-  
-  var cbarg = arguments[arguments.length - 1];
-  if (typeof cbarg === 'function') try { return deferred.promise.nodeify(cbarg); } catch(ex) { log.warn('restPost cbarg failure: ', ex); }
-
-  return deferred.promise;
 }
 
 //handles cookies between http calls

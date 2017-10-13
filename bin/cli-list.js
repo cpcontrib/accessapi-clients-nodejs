@@ -5,7 +5,6 @@ var prompt = require('prompt');
 var fs = require('fs');
 var util = require('util');
 var chalk = require('chalk');
-var Q = require('q');
 
 var cli_util = require('./cli_util');
 var log = cli_util.createLogger();
@@ -138,7 +137,7 @@ main = function() {
     accessapi.loadConfig(loadConfigOpts);
 
     log.debug('auth');
-    accessapi.auth().done(()=>{
+    accessapi.auth().then(()=>{
 
       accessapi.AssetExists(program.assetPath).then((resp2)=>{
         var resp = resp2.json;
