@@ -1,1 +1,4 @@
 *.njsproj 
+accessapi*.json 
+*.sln 
+.vscode/* 
