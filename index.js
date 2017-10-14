@@ -32,20 +32,6 @@ var opts = {
 
 var cookies = null;
 
-//read a json file with configuration fields, so we don't have to hard code them
-if (fs.existsSync('config.json')) {
-  log.info('reading config.json');
-  var config = JSON.parse(fs.readFileSync('config.json', { "encoding": "utf8" }));
-  instance = config.instance;
-  domain = config.server;
-  apikey = config.accessKey;
-  username = config.username;
-  if (log.isDebugEnabled) {
-    log.debug('config', config);
-  }
-  opts = config;
-}
-
 baseURL = function (opts) {
   return 'https://' + opts.domain + '/' + opts.instance + '/cpt_webservice/accessapi';
 }
