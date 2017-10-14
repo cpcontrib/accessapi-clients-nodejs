@@ -17,7 +17,7 @@ var constants = {
 
 
 program
-  .name('list')
+  .name('crownpeak list')
 
 program
   .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
