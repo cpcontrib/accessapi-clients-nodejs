@@ -53,7 +53,7 @@ function checkConfig() {
   }
 }
 
-exports.loadConfig = function(loadOpts) {
+loadConfig = function(loadOpts) {
   loadOpts = loadOpts || {};
   if (loadOpts["file"] === undefined) {
     loadOpts["file"] = "./accessapi-config.json";
@@ -83,7 +83,7 @@ exports.loadConfig = function(loadOpts) {
   return opts;
 }
 
-exports.auth = function (callback) {
+auth = function (callback) {
   
   return new Promise(function(resolve,reject) {
 
@@ -117,18 +117,18 @@ exports.auth = function (callback) {
   })
 }
 
-exports.logout = function (callback) {
+logout = function (callback) {
   return restPost('/auth/logout', null, callback);
 }
 
-exports.AssetExists = function (assetIdOrPath, callback) {
+AssetExists = function (assetIdOrPath, callback) {
   var body = {
     "assetIdOrPath" : assetIdOrPath
   };
   return restPost('/asset/Exists', body, callback);
 }
 
-exports.AssetUpdate = function (assetId, fields, fieldsToDelete, options) {
+AssetUpdate = function (assetId, fields, fieldsToDelete, options) {
   var body = {
     "assetId" : assetId,
     "fields": fields,
@@ -145,7 +145,7 @@ exports.AssetUpdate = function (assetId, fields, fieldsToDelete, options) {
   return restPost('/asset/Update', body, arguments[arguments.length - 1]);
 }
 
-exports.AssetUpload = function (newName, folderId, modelId, workflowId, bytes, callback) {
+AssetUpload = function (newName, folderId, modelId, workflowId, bytes, callback) {
   var body = {
     "newName": newName,
     "destinationFolderId": folderId,
@@ -157,7 +157,7 @@ exports.AssetUpload = function (newName, folderId, modelId, workflowId, bytes, c
   return restPost('/asset/Upload', body, callback);
 }
 
-exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLanguage, templateId, workflowId, callback) {
+AssetCreate = function (newName, folderId, modelId, type, devTemplateLanguage, templateId, workflowId, callback) {
   var body = {
     "newName": newName,
     "destinationFolderId": folderId,
@@ -174,13 +174,13 @@ exports.AssetCreate = function (newName, folderId, modelId, type, devTemplateLan
   return restPost('/asset/Create', body, callback);
 }
 
-exports.AssetPaged = function (AssetPagedRequest, callback) {
+AssetPaged = function (AssetPagedRequest, callback) {
   var body = AssetPagedRequest || {};
   
   return restPost('/asset/Paged', body, callback);
 }
 
-exports.AssetRoute = function (AssetRouteRequest, callback) {
+AssetRoute = function (AssetRouteRequest, callback) {
   var body = AssetRouteRequest || {};
   
   return restPost('/asset/Route', body, callback);
@@ -191,7 +191,6 @@ function setConfig(config) {
     opts[k] = config[k];
   }
 }
-exports.setConfig = setConfig;
 
 //main http call
 function restPost(url, body) {
@@ -258,4 +257,13 @@ function processCookies(resp, callback) {
   }
 }
 
-exports.logger = log;
+module.exports = {
+  auth: auth,
+  loadConfig: loadConfig,
+  setConfig: setConfig,
+  AssetExists: AssetExists,
+  AssetCreate: AssetCreate,
+  AssetPaged: AssetPaged,
+  AssetRoute: AssetRoute,
+  logger: log
+}
