@@ -7,9 +7,16 @@
     {
         "type": "node",
         "request": "launch",
-        "name": "cli list '/'",
+        "name": "cli list '/Arbor Memorial/_Web'",
         "program": "${workspaceFolder}/bin/cli-list.js",
-        "args": ["'/'"]
+        "args": ["/Arbor Memorial/_Web","--json"]
+    },
+    {
+        "type": "node",
+        "request": "launch",
+        "name": "cli retrieve '/Arbor Memorial/_Web/Web.config'",
+        "program": "${workspaceFolder}/bin/cli-retrieve.js",
+        "args": ["/Arbor Memorial/en/Branches/sample/Obituaries","-f","basic_cta_background_color"]
     },
         {
             "type": "node",
