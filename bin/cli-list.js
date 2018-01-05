@@ -78,7 +78,7 @@ function formatRawJson(program,assets,console) {
 }
 function formatCrownpeakList(program,assets,console) {
 
-  console.log(util.format('  Directory of %s', program.assetPath));
+  console.log(util.format('  Directory of crownpeak://%s%s', program.instance, program.assetPath));
   console.log('');
               
   for(var i=0; i < assets.length; i++) {
@@ -127,38 +127,41 @@ function getFormatter(program) {
 
 main = function() {
 
-    cli_util.status("Listing contents of '%s'.", program.assetPath);    
+  var status = cli_util.status;
+  log.info("Listing contents of 'crownpeak://%s%s'.", program.instance, program.assetPath);    
 
-    var accessapi = require('../index');
+  var accessapi = require('../index');
 
-    var loadConfigOpts = {};
-    loadConfigOpts.file = program.config;
-    loadConfigOpts.instance = program.instance;
-    accessapi.loadConfig(loadConfigOpts);
+  var loadConfigOpts = {};
+  loadConfigOpts.file = program.config;
+  loadConfigOpts.instance = program.instance;
+  accessapi.loadConfig(loadConfigOpts);
 
-    log.debug('auth');
-    accessapi.auth().then(()=>{
+  log.debug('auth');
+  accessapi.auth().then(()=>{
 
-      accessapi.AssetExists(program.assetPath).then((resp2)=>{
+    accessapi.AssetExists(program.assetPath).then((resp2)=>{
+      var resp = resp2.json;
+      
+      if(resp.exists !== true) {
+        status.error("folder '%s' was not found.", program.assetPath);
+        process.exit(1);
+      }
+
+      accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":200}).then((resp2)=>{
         var resp = resp2.json;
-        
-        if(resp.exists !== true) {
-            cli_util.fail("folder '%s' was not found.", program.assetPath);
-            process.exit(1);
+        var formatter = getFormatter(program);
+
+        if(formatter !== undefined) {
+          formatter(program, resp.assets, console);
         }
 
-        accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":200}).then((resp2)=>{
-            var resp = resp2.json;
-            var formatter = getFormatter(program);
-
-            if(formatter !== undefined) {
-              formatter(program, resp.assets, console);
-            }
-
-        });
+      });
 
     });
 
+  },(err) => {
+    status.error("The operation failed: ",err);
   });
 
 }();
