@@ -42,7 +42,7 @@ function getSystemStates(accessapi) {
 
 handleOutput = function(program, resp, status, writer) {
   if(program["json"]==true) {
-    process.stdout.write(JSON.stringify(resp2.json));
+    writer.write(JSON.stringify(resp.json.fields));
     return;
   }
   
@@ -59,21 +59,20 @@ handleOutput = function(program, resp, status, writer) {
     }
 
     if(fieldListArr.length > 1)
-      process.stdout.write(JSON.stringify(output));
+      writer.write(JSON.stringify(obj));
     else {
-      if(typeof output[fieldListArr[0]] === 'undefined') {
+      if(typeof obj[fieldListArr[0]] === 'undefined') {
         status.error('Field named \'%s\' wasnt found.', fieldListArr[0]);
       } else {
-        process.stdout.write(output[fieldListArr[0]]);
+        writer.write(obj[fieldListArr[0]]);
       }
-      
     }
 
     return;
   } 
 
-  if(resp2.json.fields.length == 1) {
-    process.stdout.write(resp2.json.fields[0].value);
+  if(resp.json.fields.length == 1) {
+    writer.write(resp2.json.fields[0].value);
     return;
   }
 }
@@ -107,7 +106,7 @@ main = function() {
         
         if(log.isLevelEnabled("Debug")) { log.debug("Received response: %o", resp2); }
 
-        handleOutput(program, resp, status, process.stdout.write)
+        handleOutput(program, resp2, status, process.stdout)
 
       });
 
