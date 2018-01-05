@@ -22,7 +22,7 @@ program
   .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
-  .arguments("<assetPath> [workflowStatus]")
+  .arguments("<assetPath> <workflowStatus>")
   .action(function (assetPath, workflowStatus) {
     program.assetPath = assetPath;
     program.workflowStatus = workflowStatus;
