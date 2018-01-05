@@ -22,10 +22,10 @@ program
   .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   .option('--stdin', 'read input from stdin')
-  .option('--as', 'set type of asset to be one of: developercs (updates body field) or binary (updates binary data). others defined later. this option used with file input or --stdin')
   .option('--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
   .option('--runPostInput','run post input plugin for the asset\'s template', false)
   .option('--runPostSave', 'run post save plugin on the asset\'s template', false)
+  .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .arguments("<assetPath> [inputFile]")
   .action(function (assetPath, inputFile) {
     program.assetPath = assetPath;
