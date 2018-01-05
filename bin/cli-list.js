@@ -22,8 +22,8 @@ program
   .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
-  .option('--rawJson', 'output as raw json')
-  .option('-f,--formatter', 'use a specific formatter.  valid options are [rawjson|dosdir|default]')
+  .option('--json', 'output as raw json')
+  .option('-f,--formatter', 'use a specific formatter.  valid options are [json|dosdir|default]')
   .arguments("<assetPath>")
   .action(function (assetPath) {
     program.assetPath = assetPath;
@@ -31,6 +31,11 @@ program
 
 program
   .parse(process.argv)
+
+if(program["json"]==true) {
+  program["formatter"]="json";
+}
+
 
 function getSystemStates(accessapi) {
     var deferred = Q.defer();
@@ -51,12 +56,12 @@ function pad(pad, str, padLeft) {
   }
 }
 
-function formatDosDir(program,assets,console) {
-  console.log(util.format(' Directory of %s', program.assetPath));
-  console.log('');
+function formatdosdir(program,assetArr,writer) {
+  writer.write(util.format(' Directory of %s\n', program.assetPath));
+  writer.write('\n');
               
-  for(var i=0; i < assets.length; i++) {
-    var asset = assets[i];
+  for(var i=0; i < assetArr.length; i++) {
+    var asset = assetArr[i];
     
     var directoryOrSizeStr = null;
     if(asset.type === 4) {
@@ -69,19 +74,19 @@ function formatDosDir(program,assets,console) {
     var formattedDateStr = asset.modified_date.toString();
     formattedDateStr = pad('                        ', formattedDateStr);
     
-    console.log('%s  %s %s`%d`', formattedDateStr, directoryOrSizeStr, asset.label, asset.id);
+    writer.write(util.format('%s  %s %s`%d`', formattedDateStr, directoryOrSizeStr, asset.label, asset.id));
   }
 }
-function formatRawJson(program,assets,console) {
-  console.log(JSON.stringify(assets,null,'  '));
+function formatjson(program,assetArr,writer) {
+  writer.write(JSON.stringify(assetArr,null,'  '));
 }
-function formatCrownpeakList(program,assets,console) {
+function formatCrownpeakList(program,assetArr,writer) {
 
-  console.log(util.format('  Directory of crownpeak://%s%s', program.instance, program.assetPath));
-  console.log('');
+  writer.write(util.format('  Directory of crownpeak://%s%s\n', program.instance, program.assetPath));
+  writer.write(util.format('\n'));
               
-  for(var i=0; i < assets.length; i++) {
-    var asset = assets[i];
+  for(var i=0; i < assetArr.length; i++) {
+    var asset = assetArr[i];
     
     var directoryOrSizeStr = null;
     if(asset.type === 4) {
@@ -94,34 +99,38 @@ function formatCrownpeakList(program,assets,console) {
     var formattedDateStr = asset.modified_date.toString();
     formattedDateStr = pad('                        ', formattedDateStr);
     
-    console.log('%s  %s %s (%d) [%s]', formattedDateStr, directoryOrSizeStr, asset.label, asset.id, asset.statusName);
+    writer.write(util.format('%s  %s %s (%d) [%s]\n', formattedDateStr, directoryOrSizeStr, asset.label, asset.id, asset.statusName));
   }
 }
 
-function getFormatter(program) {
-  var formatter = null;
+formatters = {
+  formatjson: formatjson,
+  formatdefault: formatCrownpeakList,
+  formatdosdir: formatdosdir
+}
 
-  if(program["rawjson"] === true) {
-    formatter = formatRawJson;
+function getFormatter(program, formatters, status) {
+  var formatFunc = null;
   
-  if(program["formatter"] !== undefined)
-    
-    if(program["formatter"] === 'default') { program["formatter"] = "formatCrownpeakList"; }
+  var formatterStr = program["formatter"]; //dont mutate program object!
 
-    formatter = global[program.formatter];
-    if(formatter === undefined) {
-      formatter = global['format' + program.formatter];
-    }
-    if(formatter === undefined) {
-      fail("a formatter named '%s' or 'format%s' was not found.");
-      process.exit(1);
-    }
-  } else {
-    //
-    formatter = formatCrownpeakList;
+  if(typeof formatterStr === 'undefined') formatterStr = "";
+
+  if(formatterStr.toLowerCase() === 'default') {
+    formatterStr = "CrownpeakList";
   }
 
-  return formatter;
+  formatFunc = formatters[formatterStr];
+  if(formatFunc === undefined) {
+    formatFunc = formatters['format' + formatterStr];
+  }
+  
+  if(formatFunc === undefined) {
+    status.error("a formatter named '%s' or 'format%s' was not found.", program["formatter"]);
+    formatFunc = formatCrownpeakList;
+  }
+
+  return formatFunc;
 }
 
 main = function() {
@@ -149,10 +158,10 @@ main = function() {
 
       accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":200}).then((resp2)=>{
         var resp = resp2.json;
-        var formatter = getFormatter(program);
+        var formatter = getFormatter(program, formatters, status);
 
         if(formatter !== undefined) {
-          formatter(program, resp.assets, console);
+          formatter(program, resp.assets, process.stdout);
         }
 
       });
@@ -164,3 +173,8 @@ main = function() {
   });
 
 }();
+
+module.exports = {
+  formatters: formatters,
+  getFormatter: getFormatter
+};
