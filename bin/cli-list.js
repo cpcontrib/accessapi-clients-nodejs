@@ -4,7 +4,6 @@ var program = require('commander');
 var prompt = require('prompt');
 var fs = require('fs');
 var util = require('util');
-var chalk = require('chalk');
 
 var cli_util = require('./cli_util');
 var log = cli_util.createLogger();
