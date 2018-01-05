@@ -21,13 +21,12 @@ program
   .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
-  .option('--rawJson', 'output as raw json')
+  .option('--json', 'output as json')
+  .option('-f, --fields [list]', 'comma separated list of fields to output. specifying exactly one field will get the field value, more than one will turn on json output.')
   //.option('-f,--formatter', 'use a specific formatter.  valid options are [rawjson|dosdir|default]')
-  .arguments("<assetPath>")
-  .arguments("[fieldList]")
-  .action(function (assetPath,fieldList) {
+  .arguments("<assetPath> required")
+  .action(function (assetPath) {
     program.assetPath = assetPath;
-    program.fieldList = fieldList;
   })
 
 program
@@ -74,17 +73,45 @@ main = function() {
         process.exit(1);
       }
 
+      if(log.isLevelEnabled("Info")) { log.info('Found asset: %s', JSON.stringify(resp2.json)); }
+
       accessapi.AssetFields({"assetId":resp.assetId}).then((resp2)=>{
-        var resp = resp2.json;
-        
-        if(program["rawJson"]=="true") {
+        if(log.isLevelEnabled("Debug")) { log.debug("Received response: %o", resp2); }
+
+        if(program["rawJson"]==true) {
           process.stdout.write(JSON.stringify(resp2.json));
-        } else if(program["fieldsList"] !== undefined) {
+          return;
+        } 
+        
+        if(typeof program["fields"] === 'string') {
+          var fieldListArr = program["fields"].split(',') || [];
           
-        } else {
-          if(resp2.json.fields.length == 1) {
-            process.stdout.write(resp2.json.fields[0].value);
+          var output = {};
+          for(var j=0;j < fieldListArr.length;j++) {
+            for(var i=0;i < resp2.json.fields.length; i++) {
+              if(fieldListArr[j] === '*' || resp2.json.fields[i].name == fieldListArr[j]) {
+                output[resp2.json.fields[i].name] = resp2.json.fields[i].value;
+              }
+            }
           }
+
+          if(fieldListArr.length > 1)
+            process.stdout.write(JSON.stringify(output));
+          else {
+            if(typeof output[fieldListArr[0]] === 'undefined') {
+              status.error('Field named \'%s\' wasnt found.', fieldListArr[0]);
+            } else {
+              process.stdout.write(output[fieldListArr[0]]);
+            }
+            
+          }
+
+          return;
+        } 
+
+        if(resp2.json.fields.length == 1) {
+          process.stdout.write(resp2.json.fields[0].value);
+          return;
         }
 
       });
