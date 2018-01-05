@@ -176,6 +176,23 @@ AssetCreate = function (newName, folderId, modelId, type, devTemplateLanguage, t
   return restPost('/asset/Create', body, callback);
 }
 
+AssetFields = function (AssetFieldsRequest) {
+  
+  return new Promise((resolve,reject)=>{
+    if(AssetFieldsRequest===undefined || AssetFieldsRequest["assetId"]===undefined) {
+      reject("No assetId specified.");
+    }
+    
+    url = '/asset/fields/' + AssetFieldsRequest["assetId"];
+
+    new Promise((resolve2,reject2)=>{
+      restPost(url, null)
+        .then((resp)=>resolve(resp));
+    })
+  
+  });
+}
+
 AssetPaged = function (AssetPagedRequest, callback) {
   var body = AssetPagedRequest || {};
   
@@ -267,5 +284,6 @@ module.exports = {
   AssetCreate: AssetCreate,
   AssetPaged: AssetPaged,
   AssetRoute: AssetRoute,
+  AssetFields: AssetFields,
   logger: log
 }
