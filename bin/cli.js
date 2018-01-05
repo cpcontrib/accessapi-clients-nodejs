@@ -2,14 +2,17 @@
 
 var program = require('commander');
 
-process.stdout.write("\n");
-process.stdout.write("Crownpeak CLI starting.\n");
-
 program
   .name('crownpeak')
-  .version('0.1.0')
+  .version('CrownPeak Access API CLI 0.1.3')
+  .option('--verbose,-v','verbose output',null,false)
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
   .command('list','list contents of a folder')
   .command('route', 'routing and publishing')
   .parse(process.argv);
+
+if(program.option.verbose === true) {
+  var cli_util = require('cli_util');
+  cli_util.status.verbose = program.option.verbose;
+}
