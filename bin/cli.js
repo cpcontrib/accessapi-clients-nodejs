@@ -9,7 +9,7 @@ program
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
   .command('list','list contents of a folder')
-  .command('get','retrieve content from an asset')
+  .command('retrieve','retrieve content from an asset')
   .command('route', 'routing and publishing')
   .parse(process.argv);
 
