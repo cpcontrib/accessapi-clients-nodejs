@@ -23,7 +23,7 @@ program
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
   .option('--json', 'output as raw json')
-  .option('-f,--formatter', 'use a specific formatter.  valid options are [json|dosdir|default]')
+  .option('-f,--formatter <formatter>', 'use a specific formatter.  valid options are [json|dosdir|default]', null, "default")
   .arguments("<assetPath>")
   .action(function (assetPath) {
     program.assetPath = assetPath;
@@ -80,7 +80,7 @@ function formatdosdir(program,assetArr,writer) {
 function formatjson(program,assetArr,writer) {
   writer.write(JSON.stringify(assetArr,null,'  '));
 }
-function formatCrownpeakList(program,assetArr,writer) {
+function formatdefault(program,assetArr,writer) {
 
   writer.write(util.format('  Directory of crownpeak://%s%s\n', program.instance, program.assetPath));
   writer.write(util.format('\n'));
@@ -105,7 +105,7 @@ function formatCrownpeakList(program,assetArr,writer) {
 
 formatters = {
   formatjson: formatjson,
-  formatdefault: formatCrownpeakList,
+  formatdefault: formatdefault,
   formatdosdir: formatdosdir
 }
 
@@ -114,10 +114,10 @@ function getFormatter(program, formatters, status) {
   
   var formatterStr = program["formatter"]; //dont mutate program object!
 
-  if(typeof formatterStr === 'undefined') formatterStr = "";
+  if(typeof formatterStr !== 'string') formatterStr = "";
 
-  if(formatterStr.toLowerCase() === 'default') {
-    formatterStr = "CrownpeakList";
+  if(formatterStr === "" || formatterStr.toLowerCase() === 'default') {
+    formatterStr = "default";
   }
 
   formatFunc = formatters[formatterStr];
@@ -126,8 +126,8 @@ function getFormatter(program, formatters, status) {
   }
   
   if(formatFunc === undefined) {
-    status.error("a formatter named '%s' or 'format%s' was not found.", program["formatter"]);
-    formatFunc = formatCrownpeakList;
+    status.error("a formatter named '%s' or 'format%s' was not found.", formatterStr, formatterStr);
+    formatFunc = formatdefault;
   }
 
   return formatFunc;
