@@ -86,7 +86,12 @@ statusImpl = function(){
 }
 var statusSingleton = new statusImpl();
 
+asListFunction = function(val) {
+  return val.split(',');
+}
+
 module.exports = {
     createLogger: createLogger,
-    status: statusSingleton
+    status: statusSingleton,
+    asList: asListFunction
 };

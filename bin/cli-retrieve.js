@@ -22,7 +22,7 @@ program
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
   .option('--json', 'output as json')
-  .option('-f, --fields [list]', 'comma separated list of fields to output. specifying exactly one field will get the field value, more than one will turn on json output.')
+  .option('-f, --fields <list>', 'comma separated list of fields to output. specifying exactly one field will get the field value, more than one will turn on json output.', cli_util.asList, [])
   //.option('-f,--formatter', 'use a specific formatter.  valid options are [rawjson|dosdir|default]')
   .arguments("<assetPath> required")
   .action(function (assetPath) {
@@ -46,14 +46,14 @@ handleOutput = function(program, resp, status, writer) {
     return;
   }
   
-  if(typeof program["fields"] === 'string') {
-    var fieldListArr = program["fields"].split(',') || [];
+  var fieldListArr = program["fields"];
+  if(fieldListArr.length > 0) {
     
-    var output = {};
+    var obj = {};
     for(var j=0;j < fieldListArr.length;j++) {
-      for(var i=0;i < resp2.json.fields.length; i++) {
-        if(fieldListArr[j] === '*' || resp2.json.fields[i].name == fieldListArr[j]) {
-          output[resp2.json.fields[i].name] = resp2.json.fields[i].value;
+      for(var i=0;i < resp.json.fields.length; i++) {
+        if(fieldListArr[j] === '*' || resp.json.fields[i].name == fieldListArr[j]) {
+          obj[resp.json.fields[i].name] = resp.json.fields[i].value;
         }
       }
     }
