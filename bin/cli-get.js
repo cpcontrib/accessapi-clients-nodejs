@@ -40,13 +40,41 @@ function getSystemStates(accessapi) {
     return deferred.promise;
 }
 
-function pad(pad, str, padLeft) {
-  if (typeof str === 'undefined') 
-    return pad;
-  if (padLeft) {
-    return (pad + str).slice(-pad.length);
-  } else {
-    return (str + pad).substring(0, pad.length);
+handleOutput = function(program, resp, status, writer) {
+  if(program["json"]==true) {
+    process.stdout.write(JSON.stringify(resp2.json));
+    return;
+  }
+  
+  if(typeof program["fields"] === 'string') {
+    var fieldListArr = program["fields"].split(',') || [];
+    
+    var output = {};
+    for(var j=0;j < fieldListArr.length;j++) {
+      for(var i=0;i < resp2.json.fields.length; i++) {
+        if(fieldListArr[j] === '*' || resp2.json.fields[i].name == fieldListArr[j]) {
+          output[resp2.json.fields[i].name] = resp2.json.fields[i].value;
+        }
+      }
+    }
+
+    if(fieldListArr.length > 1)
+      process.stdout.write(JSON.stringify(output));
+    else {
+      if(typeof output[fieldListArr[0]] === 'undefined') {
+        status.error('Field named \'%s\' wasnt found.', fieldListArr[0]);
+      } else {
+        process.stdout.write(output[fieldListArr[0]]);
+      }
+      
+    }
+
+    return;
+  } 
+
+  if(resp2.json.fields.length == 1) {
+    process.stdout.write(resp2.json.fields[0].value);
+    return;
   }
 }
 
@@ -76,43 +104,10 @@ main = function() {
       if(log.isLevelEnabled("Info")) { log.info('Found asset: %s', JSON.stringify(resp2.json)); }
 
       accessapi.AssetFields({"assetId":resp.assetId}).then((resp2)=>{
+        
         if(log.isLevelEnabled("Debug")) { log.debug("Received response: %o", resp2); }
 
-        if(program["rawJson"]==true) {
-          process.stdout.write(JSON.stringify(resp2.json));
-          return;
-        } 
-        
-        if(typeof program["fields"] === 'string') {
-          var fieldListArr = program["fields"].split(',') || [];
-          
-          var output = {};
-          for(var j=0;j < fieldListArr.length;j++) {
-            for(var i=0;i < resp2.json.fields.length; i++) {
-              if(fieldListArr[j] === '*' || resp2.json.fields[i].name == fieldListArr[j]) {
-                output[resp2.json.fields[i].name] = resp2.json.fields[i].value;
-              }
-            }
-          }
-
-          if(fieldListArr.length > 1)
-            process.stdout.write(JSON.stringify(output));
-          else {
-            if(typeof output[fieldListArr[0]] === 'undefined') {
-              status.error('Field named \'%s\' wasnt found.', fieldListArr[0]);
-            } else {
-              process.stdout.write(output[fieldListArr[0]]);
-            }
-            
-          }
-
-          return;
-        } 
-
-        if(resp2.json.fields.length == 1) {
-          process.stdout.write(resp2.json.fields[0].value);
-          return;
-        }
+        handleOutput(program, resp, status, process.stdout.write)
 
       });
 
