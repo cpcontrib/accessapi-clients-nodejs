@@ -4,6 +4,7 @@ var log4js = require('log4js');
 var util = require('util');
 var keytar = require('keytar');
 
+//create logger for this library
 var log = log4js.getLogger('crownpeak-accessapi');
 
 // if (fs.existsSync('./log4js.json')) {
@@ -80,6 +81,7 @@ loadConfig = function(loadOpts) {
   }
 
   setConfig(accessapiConfig);
+  
   return opts;
 }
 
