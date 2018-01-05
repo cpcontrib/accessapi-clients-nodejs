@@ -2,7 +2,6 @@ var requestify = require('requestify');
 var fs = require('fs');
 var log4js = require('log4js');
 var util = require('util');
-var keytar = require('keytar');
 
 //create logger for this library
 var log = log4js.getLogger('crownpeak-accessapi');
@@ -87,36 +86,46 @@ loadConfig = function(loadOpts) {
 
 auth = function (callback) {
   
+  var keytar;
+  try {
+    keytar = require('keytar');
+  } catch(e) {}
+
   return new Promise(function(resolve,reject) {
 
     var password = null;
 
-    new Promise(function(resolve2,reject2) {
-      if(opts.password === undefined || opts.password === '') {
+    if(opts.password === undefined || opts.password === '') {
 
-        keytar.getPassword('Crownpeak-AccessAPI-NodeJS',opts["username"]+"@"+opts["instance"]).then((returnedPass) => {
-          resolve2(returnedPass)
-        }, (reason) => {
-          console.log('fail to retrieve password');
-          reject2(reason);
-        })
-        
+      if(keytar === undefined) {
+        return reject("No password available and the keytar npm package failed to load.  Must set password in the accessapiconfig.json or...");
       }
-    }).then((password)=>{
 
-      var body = {
-        "instance": opts.instance, 
-        "username": opts.username, 
-        "password": password, 
-        "remember_me": false, 
-        "timeZoneOffsetMinutes": -480
-      };
+      //keytar uses OS keyring to store/retrieve passwords.
+      keytar.getPassword('Crownpeak-AccessAPI-NodeJS',opts["username"]+"@"+opts["instance"]).then((returnedPass) => {
+        resolve(returnedPass)
+      }, (reason) => {
+        log.warn('Failed to retrieve password: %s',reason);
+        reject(reason);
+      })
+      
+    }
+  }).then((password)=>{
 
-      var restPostPromise = restPost('/auth/authenticate', body, callback);
-      return resolve(restPostPromise);
-    
-    })
-  })
+    var body = {
+      "instance": opts.instance, 
+      "username": opts.username, 
+      "password": password, 
+      "remember_me": false, 
+      "timeZoneOffsetMinutes": -480
+    };
+
+    var restPostPromise = restPost('/auth/authenticate', body, callback);
+    return resolve(restPostPromise);
+  
+  });
+
+  
 }
 
 logout = function (callback) {
