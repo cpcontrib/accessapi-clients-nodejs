@@ -136,7 +136,6 @@ function getFormatter(program, formatters, status) {
 main = function() {
 
   var status = cli_util.status;
-  log.info("Listing contents of 'crownpeak://%s%s'.", program.instance, program.assetPath);    
 
   var accessapi = require('../index');
 
@@ -144,6 +143,8 @@ main = function() {
   loadConfigOpts.file = program.config;
   loadConfigOpts.instance = program.instance;
   accessapi.loadConfig(loadConfigOpts);
+
+  log.info("Listing contents of 'crownpeak://%s%s'.", program.instance, program.assetPath);    
 
   log.debug('auth');
   accessapi.auth().then(()=>{
