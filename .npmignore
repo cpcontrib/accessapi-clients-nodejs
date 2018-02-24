@@ -1,4 +1,7 @@
 *.njsproj 
-accessapi*.json 
 *.sln 
 .vscode/* 
+
+#definitely ignore these config files
+accessapi*.json 
+log4js*.json 

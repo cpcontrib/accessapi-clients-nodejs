@@ -1,4 +1,4 @@
-var log4js = require('log4js');
+var log4js = require('@log4js-node/log4js-api');
 var fs = require('fs');
 var chalk = require('chalk');
 var util = require('util');
@@ -6,31 +6,6 @@ var util = require('util');
 var log;
 function createLogger() {
   log = log4js.getLogger('crownpeak-accessapi-cli');
-
-  if(process.env["LOG4JS_CONFIG"] !== undefined) {
-    try { 
-      log4js_config = JSON.parse(process.env["LOG4JS_CONFIG"]);
-      log4js.configure(log4js_config);
-    } catch(Exception) {}
-  } else if(process.env["LOG4JS_LEVEL"] !== undefined) {
-    log.setLevel(process.env["LOG4JS_LEVEL"]);
-  } else if (fs.existsSync('./log4js.json')) {
-    log4js.configure('./log4js.json');
-  }
-
-   log4js.configure({
-     appenders: [
-  //     { 
-  //         type: 'console' , 
-  //         level: 'INFO', 
-  //         layout: { type:"pattern", pattern: " %[%m%]" } 
-  //     },
-     ]
-   })
-    
-  //log.setLevel('INFO');
-  //log.setLevel('OFF');
-  
   return log;
 }
 

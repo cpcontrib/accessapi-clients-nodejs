@@ -1,26 +1,10 @@
 var requestify = require('requestify');
 var fs = require('fs');
-var log4js = require('log4js');
+var log4js = require('@log4js-node/log4js-api');
 var util = require('util');
 
 //create logger for this library
 var log = log4js.getLogger('crownpeak-accessapi');
-
-// if (fs.existsSync('./log4js.json')) {
-//   log4js.configure('./log4js.json');
-// } else if(process.env.LOG4JS_CONFIG !== undefined) {
-//   //do nothing, log4js configures based on this
-// } else {
-//   log4js.configure({
-//     appenders: [
-//       { 
-//         type: 'console', 
-//         layout: { type: 'pattern', pattern: '%d{ABSOLUTE} %c%[%-5p%] %m%n'}
-//       }
-//     ]
-//   })
-//   //log.setLevel(log4js.levels.OFF);//default, dont show any
-// }
 
 var opts = {
   "apikey": "",

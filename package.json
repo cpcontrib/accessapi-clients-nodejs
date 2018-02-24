@@ -21,11 +21,14 @@
     "crownpeak": "./bin/cli.js"
   },
   "dependencies": {
+    "@log4js-node/log4js-api": "^1.0.0",
     "chalk": "^1.1.3",
     "commander": "^2.12.2",
     "keytar": "^4.1.0",
-    "log4js": "^1.1.0",
     "prompt": "^1.0.0",
     "requestify": "^0.2.5"
+  },
+  "optionalDependencies": {
+    "log4js": "^2.5.3"
   }
 }
