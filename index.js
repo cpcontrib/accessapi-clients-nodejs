@@ -91,40 +91,48 @@ auth = function (callback) {
     keytar = require('keytar');
   } catch(e) {}
 
-  return new Promise(function(resolve,reject) {
+  return new Promise((resolve,reject) => {
+    
+    new Promise((resolve2,reject2) => {
 
-    var password = null;
+      var password = null;
 
-    if(opts.password === undefined || opts.password === '') {
+      if(opts.password === undefined || opts.password === '') {
 
-      if(keytar === undefined) {
-        return reject("No password available and the keytar npm package failed to load.  Must set password in the accessapiconfig.json or...");
+        if(keytar === undefined) {
+          return reject("No password available and the keytar npm package is not available.  Must set password in the accessapiconfig.json or via --password option.");
+        }
+
+        var service = 'UN=' + opts.username + ';CN=' + opts.instance;
+
+        //keytar uses OS keyring to store/retrieve passwords.
+        keytar.getPassword('Crownpeak-AccessAPI-NodeJS',service)
+        .then((returnedPass) => {
+          resolve2(returnedPass)
+        }, (reason) => {
+          log.fatal('Failed to retrieve password: %s',reason);
+          reject2(reason);
+        })
+        
       }
+    }).catch((reason)=> {
+      status.fatal(reason);
+    }).then((password) => {
 
-      //keytar uses OS keyring to store/retrieve passwords.
-      keytar.getPassword('Crownpeak-AccessAPI-NodeJS',opts["username"]+"@"+opts["instance"]).then((returnedPass) => {
-        resolve(returnedPass)
-      }, (reason) => {
-        log.warn('Failed to retrieve password: %s',reason);
-        reject(reason);
-      })
-      
-    }
-  }).then((password)=>{
+      var body = {
+        "instance": opts.instance, 
+        "username": opts.username, 
+        "password": password, 
+        "remember_me": false, 
+        "timeZoneOffsetMinutes": -480
+      };
 
-    var body = {
-      "instance": opts.instance, 
-      "username": opts.username, 
-      "password": password, 
-      "remember_me": false, 
-      "timeZoneOffsetMinutes": -480
-    };
-
-    var restPostPromise = restPost('/auth/authenticate', body, callback);
-    return resolve(restPostPromise);
+      var restPostPromise = restPost('/auth/authenticate', body, callback);
+      return resolve(restPostPromise);
   
-  });
+    });
 
+  });
   
 }
 
