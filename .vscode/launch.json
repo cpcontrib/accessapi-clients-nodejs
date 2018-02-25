@@ -4,20 +4,28 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    {
-        "type": "node",
-        "request": "launch",
-        "name": "cli list '/Arbor Memorial/_Web'",
-        "program": "${workspaceFolder}/bin/cli-list.js",
-        "args": ["/Arbor Memorial/_Web","--json"]
-    },
-    {
-        "type": "node",
-        "request": "launch",
-        "name": "cli retrieve '/Arbor Memorial/_Web/Web.config'",
-        "program": "${workspaceFolder}/bin/cli-retrieve.js",
-        "args": ["/Arbor Memorial/en/Branches/sample/Obituaries","-f","basic_cta_background_color"]
-    },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "cli list '/Arbor Memorial/_Web'",
+            "program": "${workspaceFolder}/bin/cli-list.js",
+            "args": ["/","--json"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "cli init",
+            "program": "${workspaceFolder}/bin/cli-init.js",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "cli retrieve '/Arbor Memorial/_Web/Web.config'",
+            "program": "${workspaceFolder}/bin/cli-retrieve.js",
+            "args": ["/Arbor Memorial/en/Branches/sample/Obituaries","-f","basic_cta_background_color"]
+        },
         {
             "type": "node",
             "request": "launch",
