@@ -12,10 +12,12 @@ var constants = {
 program
   .name('init')
   .parse(process.argv)
-  
-console.log('Initialize a %s', constants.configJsonName);
+
+console.log('CrownPeak AccessAPI v0.3.0');
+console.log('- Initialize %s', constants.configJsonName);
 console.log();
-console.log('Note that the CrownPeak AccessAPI requires the use of an API Key.  Contact CrownPeak support at support@crownpeak.com to request a key.');
+console.log(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));
+console.log('Contact CrownPeak support at support@crownpeak.com to request a key.');
 console.log();
 console.log();
 
