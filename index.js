@@ -3,6 +3,7 @@ var fs = require('fs');
 var log4js = require('@log4js-node/log4js-api');
 var util = require('util');
 const path = require('path');
+var keytar = require('keytar');
 
 //create logger for this library
 var log = log4js.getLogger('crownpeak-accessapi');
@@ -122,47 +123,35 @@ function readConfig(loadOpts, accessapiConfig) {
   }
 }
 
+getPassword = function(opts) {
+  return new Promise((resolve,reject) => {
+    
+    //easy path
+    if(opts.password !== undefined && opts.password !== '') {
+      resolve(opts.password);
+    }
 
-  setConfig(accessapiConfig);
-  
-  return opts;
+    //create service name for keytar to query OS keyring
+    var service = 'UN=' + opts.username + ';CN=' + opts.instance;
+
+    keytar.getPassword('Crownpeak-AccessAPI-NodeJS',service)
+      .then((returnedPass) => {
+        resolve(returnedPass)
+      }, (reason) => {
+        log.fatal('Failed to retrieve password: %s',reason);
+        reject(reason);
+      });
+
+  });
 }
 
 auth = function (callback) {
   
-  var keytar;
-  try {
-    keytar = require('keytar');
-  } catch(e) {}
-
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve,reject)=> {
+  
+    getPassword(opts)
+      .then((password)=> {
     
-    new Promise((resolve2,reject2) => {
-
-      var password = null;
-
-      if(opts.password === undefined || opts.password === '') {
-
-        if(keytar === undefined) {
-          return reject("No password available and the keytar npm package is not available.  Must set password in the accessapiconfig.json or via --password option.");
-        }
-
-        var service = 'UN=' + opts.username + ';CN=' + opts.instance;
-
-        //keytar uses OS keyring to store/retrieve passwords.
-        keytar.getPassword('Crownpeak-AccessAPI-NodeJS',service)
-        .then((returnedPass) => {
-          resolve2(returnedPass)
-        }, (reason) => {
-          log.fatal('Failed to retrieve password: %s',reason);
-          reject2(reason);
-        })
-        
-      }
-    }).catch((reason)=> {
-      status.fatal(reason);
-    }).then((password) => {
-
       var body = {
         "instance": opts.instance, 
         "username": opts.username, 
@@ -172,7 +161,7 @@ auth = function (callback) {
       };
 
       var restPostPromise = restPost('/auth/authenticate', body, callback);
-      return resolve(restPostPromise);
+      resolve(restPostPromise);
   
     });
 
