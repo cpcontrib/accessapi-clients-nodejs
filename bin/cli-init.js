@@ -13,7 +13,6 @@ program
   .name('init')
   .parse(process.argv)
 
-console.log('CrownPeak AccessAPI v0.3.0');
 console.log('- Initialize %s', constants.configJsonName);
 console.log();
 console.log(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));

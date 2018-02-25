@@ -1,11 +1,19 @@
 #!/usr/bin/env node
 
 var program = require('commander');
+var packagejson = require('../package.json');
+var status = require('./cli_util').status;
 
 program
   .name('crownpeak')
-  .version('CrownPeak Access API CLI 0.1.3')
-  .option('--verbose,-v','verbose output',null,false)
+  .version(packagejson.version, '--version')
+  .option('-v,--verbose','verbose output',null,false)
+  .option('-q,--quiet','quiet output',null,false)
+  .action(()=>{
+    status.options.verbose = program.option.verbose;
+    status.options.quiet = program.option.quiet;
+    console.log('status.options=%s', JSON.stringify(status.options));
+  })
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
   .command('list','list contents of a folder')
@@ -13,7 +21,5 @@ program
   .command('route', 'routing and publishing')
   .parse(process.argv);
 
-if(program.option.verbose === true) {
-  var cli_util = require('cli_util');
-  cli_util.status.verbose = program.option.verbose;
-}
+
+status.banner(process.stdout);
