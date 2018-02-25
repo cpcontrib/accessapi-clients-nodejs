@@ -67,14 +67,10 @@ var properties = [
     //}
   }
 ];
-var testOptions = [
-  {
-    name: 'test_options'
-    ,message: 'Test these options against webservice?'
-    ,validator: /[y|n]/
-  }
-];
 
+
+prompt.message = "Enter ";
+prompt.delimiter = chalk.green(':');
 prompt.start();
 
 prompt.get(properties, function(err,result) {
@@ -82,36 +78,85 @@ prompt.get(properties, function(err,result) {
   
   result["cms_instance_url"] = "https://" + result["domain"] + "/" + result["instance"];
   
-  new Promise((resolve,reject)=>{
+  return new Promise((resolve,reject) => {
+    var keytar;
+    try { keytar = require('keytar'); }
+    catch(ex) { throw 'Failed to load keytar.'; }
 
-    const keytar = require('keytar');
-    keytar.setPassword('Crownpeak-AccessAPI-NodeJS',result["username"]+'@'+result["instance"],result["password"]).then(()=>{
-      console.log('Stored password into OS keychain.');
+    var service = 'UN=' + result.username + ';CN=' + result.instance;
+    keytar.setPassword('Crownpeak-AccessAPI-NodeJS', service, result.password).then(()=>{
+      console.log(chalk.green('Stored password into OS keychain.'));
       resolve();
     })
-
+  
   }).then(()=> {
 
-    delete result["password"];
+    var showOptions = Object.assign({}, result);
+    delete showOptions.password;
 
-    console.log('options:');
-    console.log(JSON.stringify(result,null,2));
-
+    console.log('Here is the options:');
+    console.log(JSON.stringify(showOptions,null,2));
     console.log();
-    prompt.get(testOptions, (err,testresult)=>{
-      if(testresult["test_options"] === 'y') {
-        console.log('not implemented yet');
-      }
+
+    checkConfig(result)
+    .then(()=>{
+
+      prompt.get([{name:'write_file',message:'Write to file?',validator: /[y|n]/}], (err,questionResult)=> {
+
+        if(questionResult["write_file"] === 'y') {
+          delete result.password;
+
+          //write the options into accessapi-config.json file
+          fs.writeFileSync('./' + constants.configJsonName, JSON.stringify(result,null,2), 'utf-8');
     
-      fs.writeFileSync('./' + constants.configJsonName, JSON.stringify(result,null,2), 'utf-8');
-      console.log();
-      console.log('Wrote answers to %s', constants.configJsonName);
-      
+          console.log();
+          console.log('Wrote answers to %s', constants.configJsonName);
+        }
+
+      });
+
     })
 
   })
 
 });
+
+function checkConfig(options) {
+
+  return new Promise((resolve,reject)=> {
+
+    prompt.message = "";
+    prompt.get([
+      {
+        name: 'test_options'
+        ,message: 'Test these options against webservice?'
+        ,validator: /[y|n]/
+      }
+    ], (err, testresult) => {
+
+      if(testresult["test_options"] === 'n') {
+        resolve();
+      } else {
+
+        accessapi = require('../index.js');
+        accessapi.setConfig(options);
+        accessapi.auth().then(()=>{
+          console.log('Appears to have succeeded.');
+          resolve();
+        }).catch((reason)=>{
+          console.log('Appears to have failed.');
+          reject();
+        })
+
+      }
+      
+    })
+
+  });
+
+}
+
+
 
 function onErr(err) {
   console.log(err);
