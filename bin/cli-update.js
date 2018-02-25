@@ -19,7 +19,7 @@ program
   .name('update')
 
 program
-  .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
+  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   .option('--stdin', 'read input from stdin')
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')

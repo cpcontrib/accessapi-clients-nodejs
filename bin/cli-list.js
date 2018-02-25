@@ -19,7 +19,7 @@ program
   .name('crownpeak list')
 
 program
-  .option('--config <file>', 'a config file to use. defaults to using ./accessapi-config.json', 'accessapi-config.json')
+  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
   .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
   .option('--json', 'output as raw json')
