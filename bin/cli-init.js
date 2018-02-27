@@ -3,6 +3,8 @@
 var program = require('commander');
 var prompt = require('prompt');
 var fs = require('fs');
+var path = require('path');
+var util = require('util');
 var chalk = require('chalk');
 
 var status = require('./cli_util').status;
@@ -10,6 +12,9 @@ var constants = require('./cli_util').constants;
 
 program
   .name('init')
+  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json', constants.configJsonName)
+
+program
   .parse(process.argv)
 
 
@@ -58,15 +63,16 @@ let main = function (program) {
   console.log();
   
   var currentValues = {};
-  if(fs.existsSync('accessapi-config.json')) {
-    
-    try {
-      currentValues = JSON.parse(fs.readFileSync(constants.configJsonName, { encoding:"utf8" }));
-    } 
-    catch(e) {
-      console.log(chalk.red('Warning: Failed to read current %s',constants.configJsonName));
-      console.log();
-    }
+
+  if(program.config === undefined) {
+    program.config = constants.configJsonName;
+  }
+
+  var fname = path.join(process.cwd(), program.config);
+  if(fs.existsSync(fname) === false) {
+    throw util.format('Config file named \'%s\' was not found.', program.config);
+  } else {
+    currentValues = JSON.parse(fs.readFileSync(fname, { encoding:"utf8" }));
   }
   
   //https://github.com/flatiron/prompt#valid-property-settings
@@ -137,16 +143,22 @@ let main = function (program) {
       askTestConfigOptions(result)
       .then(()=>{
   
-        prompt.get([{name:'write_file',message:'Write to file?',validator: /[y|n]/}], (err,questionResult)=> {
+        var writeFilePrompt = {
+          name:'write_file',
+          message:util.format('Write to file \'%s\'?',program.config),
+          validator: /[y|n]/
+        };
+
+        prompt.get([writeFilePrompt], (err,questionResult)=> {
   
           if(questionResult["write_file"] === 'y') {
             delete result.password;
   
             //write the options into accessapi-config.json file
-            fs.writeFileSync('./' + constants.configJsonName, JSON.stringify(result,null,2), 'utf-8');
+            fs.writeFileSync('./' + program.config, JSON.stringify(result,null,2), 'utf-8');
       
             console.log();
-            console.log('Wrote answers to %s', constants.configJsonName);
+            console.log('Wrote answers to %s', program.config);
           }
   
         });
