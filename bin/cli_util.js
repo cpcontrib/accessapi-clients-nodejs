@@ -26,10 +26,21 @@ statusImpl.prototype.options = {
 
 /// writes banner to stdout when quiet==false
 statusImpl.prototype.banner = function(stream) {
-  if(this.options.quiet === false) {
+  if(this.options.quiet !== false) {
+    //inform('\nCrownPeak AccessAPI CLI\n\n');
     stream.write('\n');
     stream.write('CrownPeak AccessAPI CLI\n');
     stream.write('\n');
+  }
+}
+
+/// writes informational message thats not included in logs
+/// quiet = false
+statusImpl.prototype.inform = function(text) {
+  if(this.options.quiet !== false) {
+    var str = util.format.apply(null,argsArray);
+    process.stdout.write(str);
+    process.stdout.write('\n');
   }
 }
 
