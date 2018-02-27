@@ -76,8 +76,14 @@ asListFunction = function(val) {
   return val.split(',');
 }
 
+/* constants */
+var constants = {
+  configJsonName: "accessapi-config.json"
+};
+
 module.exports = {
     createLogger: createLogger,
     status: statusSingleton,
-    asList: asListFunction
+    asList: asListFunction,
+    constants: constants
 };

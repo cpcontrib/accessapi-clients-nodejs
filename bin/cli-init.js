@@ -5,9 +5,8 @@ var prompt = require('prompt');
 var fs = require('fs');
 var chalk = require('chalk');
 
-var constants = {
-  configJsonName: "accessapi-config.json"
-};
+var status = require('./cli_util').status;
+var constants = require('./cli_util').constants;
 
 program
   .name('init')
