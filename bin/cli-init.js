@@ -55,12 +55,12 @@ let askTestConfigOptions = function (options) {
 
 let main = function (program) {
 
-  console.log('- Initialize %s', constants.configJsonName);
-  console.log();
-  console.log(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));
-  console.log('Contact CrownPeak support at support@crownpeak.com to request a key.');
-  console.log();
-  console.log();
+  status.info('Initialize %s', constants.configJsonName);
+  status.info();
+  status.info(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));
+  status.info('Contact CrownPeak support at support@crownpeak.com to request a key.');
+  status.info();
+  status.info();
   
   var currentValues = {};
 
@@ -127,7 +127,7 @@ let main = function (program) {
   
       var service = 'UN=' + result.username + ';CN=' + result.instance;
       keytar.setPassword('Crownpeak-AccessAPI-NodeJS', service, result.password).then(()=>{
-        console.log(chalk.green('Stored password into OS keychain.'));
+        status.info(chalk.green('Stored password into OS keychain.'));
         resolve();
       })
     
@@ -136,9 +136,9 @@ let main = function (program) {
       var showOptions = Object.assign({}, result);
       delete showOptions.password;
   
-      console.log('Here is the options:');
-      console.log(JSON.stringify(showOptions,null,2));
-      console.log();
+      status.info('Here are the options:\n' + 
+        '%s\n' +
+        '\n', JSON.stringify(showOptions,null,2));
   
       askTestConfigOptions(result)
       .then(()=>{
@@ -151,14 +151,22 @@ let main = function (program) {
 
         prompt.get([writeFilePrompt], (err,questionResult)=> {
   
+          delete result.password;
+
           if(questionResult["write_file"] === 'y') {
-            delete result.password;
   
             //write the options into accessapi-config.json file
-            fs.writeFileSync('./' + program.config, JSON.stringify(result,null,2), 'utf-8');
+            let fname = path.join(process.cwd(), program.config);
+            
+            log.info("Writing to file '%s'.", fname);
+            
+            try { fs.writeFileSync(fname, JSON.stringify(result,null,2), 'utf-8'); }
+            catch(e) { status.fail('Failed to write file: %s', e); }
       
-            console.log();
-            console.log('Wrote answers to %s', program.config);
+            status.info('Wrote answers to %s', program.config);
+          } else {
+            status.warn('Aborted.');
+
           }
   
         });

@@ -3,18 +3,20 @@ var fs = require('fs');
 var chalk = require('chalk');
 var util = require('util');
 
-var log;
+var log = log4js.getLogger('crownpeak-accessapi-cli');
 function createLogger() {
-  log = log4js.getLogger('crownpeak-accessapi-cli');
   return log;
 }
 
 statusImpl = function() {
 
-  var chalkInfo = chalk.reset; //basically use default
   var chalkError = chalk.red;
   var chalkWarn = chalk.yellow;
 
+}
+
+statusImpl.prototype.write = function(text) {
+  return text;
 }
 
 statusImpl.prototype.options = {
@@ -40,7 +42,7 @@ statusImpl.prototype.info = function(text) {
   }
 
   var str = util.format.apply(null,argsArray);
-  process.stdout.write(chalkInfo(str));
+  process.stdout.write(str);
   process.stdout.write('\n');
 }
 
