@@ -26,7 +26,7 @@ statusImpl.prototype.options = {
 
 /// writes banner to stdout when quiet==false
 statusImpl.prototype.banner = function(stream) {
-  if(this.options.quiet !== false) {
+  if(this.options.quiet !== true) {
     //inform('\nCrownPeak AccessAPI CLI\n\n');
     stream.write('\n');
     stream.write('CrownPeak AccessAPI CLI\n');
@@ -37,7 +37,8 @@ statusImpl.prototype.banner = function(stream) {
 /// writes informational message thats not included in logs
 /// quiet = false
 statusImpl.prototype.inform = function(text) {
-  if(this.options.quiet !== false) {
+  if(this.options.quiet !== true) {
+    var argsArray = Array.prototype.slice.call(arguments);
     var str = util.format.apply(null,argsArray);
     process.stdout.write(str);
     process.stdout.write('\n');
@@ -52,9 +53,11 @@ statusImpl.prototype.info = function(text) {
     log.info.apply(log, argsArray);
   }
 
-  var str = util.format.apply(null,argsArray);
-  process.stdout.write(str);
-  process.stdout.write('\n');
+  if(this.options.quiet !== true) {
+    var str = util.format.apply(null,argsArray);
+    process.stdout.write(str);
+    process.stdout.write('\n');
+  }
 }
 
 /// writes warning message to stdout and to logs
@@ -66,7 +69,7 @@ statusImpl.prototype.warn = function(text) {
   }
 
   var str = util.format.apply(null,argsArray);
-  process.stderr.write(chalkWarn(str));
+  process.stderr.write(chalk.yellow(str));
   process.stderr.write('\n');
 }
 
@@ -79,7 +82,7 @@ statusImpl.prototype.error = function(text) {
   }
 
   var str = util.format.apply(null,argsArray);
-  process.stderr.write(chalkError(str));
+  process.stderr.write(chalk.red(str));
   process.stderr.write('\n');
 }
 
