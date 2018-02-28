@@ -7,12 +7,11 @@ var status = require('./cli_util').status;
 program
   .name('crownpeak')
   .version(packagejson.version, '--version')
-  .option('-v,--verbose','verbose output',null,false)
-  .option('-q,--quiet','quiet output',null,false)
+  .option('-v, --verbose','verbose output',false)
+  .option('-q, --quiet','quiet output',false)
   .action(()=>{
-    status.options.verbose = program.option.verbose;
-    status.options.quiet = program.option.quiet;
-    console.log('status.options=%s', JSON.stringify(status.options));
+    status.options.verbose = program.verbose;
+    status.options.quiet = program.quiet;
   })
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
