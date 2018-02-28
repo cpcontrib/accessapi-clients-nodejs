@@ -10,6 +10,9 @@ var chalk = require('chalk');
 var status = require('./cli_util').status;
 var constants = require('./cli_util').constants;
 
+var log4js = require('@log4js-node/log4js-api');
+var log = log4js.getLogger('crownpeak-cli');
+
 program
   .name('init')
   .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json', constants.configJsonName)
@@ -38,10 +41,11 @@ let askTestConfigOptions = function (options) {
         accessapi = require('../index.js');
         accessapi.setConfig(options);
         accessapi.auth().then(()=>{
-          console.log('Appears to have succeeded.');
+          status.info('Test connection appears to have succeeded.');
           resolve();
         }).catch((reason)=>{
-          console.log('Appears to have failed.');
+          status.warn('Test connection appears to have failed.');
+          log.info('options used: %o', options);
           reject();
         })
 
@@ -55,12 +59,12 @@ let askTestConfigOptions = function (options) {
 
 let main = function (program) {
 
-  status.info('Initialize %s', constants.configJsonName);
-  status.info();
-  status.info(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));
-  status.info('Contact CrownPeak support at support@crownpeak.com to request a key.');
-  status.info();
-  status.info();
+  status.inform('Initialize %s', constants.configJsonName);
+  status.inform();
+  status.inform(chalk.yellow('Note that the CrownPeak AccessAPI requires the use of an API Key.'));
+  status.inform('Contact CrownPeak support at support@crownpeak.com to request a key.');
+  status.inform();
+  status.inform();
   
   var currentValues = {};
 
