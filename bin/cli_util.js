@@ -3,7 +3,7 @@ var fs = require('fs');
 var chalk = require('chalk');
 var util = require('util');
 
-var log = log4js.getLogger('crownpeak-accessapi-cli');
+var log = log4js.getLogger('crownpeak-cli');
 function createLogger() {
   return log;
 }
