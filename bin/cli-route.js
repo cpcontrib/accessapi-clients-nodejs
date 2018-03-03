@@ -6,21 +6,17 @@ var fs = require('fs');
 var util = require('util');
 var chalk = require('chalk');
 
-var cli_util = require('./cli_util');
-var log = cli_util.createLogger();
+var status = require('./cli_util').status;
+var log = require('./cli_util').createLogger();
 
 process.on('exit', () => { process.exit(0); })
-
-var constants = {
-  configJsonName: "accessapi-config.json"
-};
 
 program
   .name('route')
 
 program
   .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
-  .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
+  .option('-i,--instance <instance>', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
   .arguments("<assetPath> <workflowStatus>")
   .action(function (assetPath, workflowStatus) {
@@ -38,7 +34,6 @@ function getSystemState(accessapi, workflowStatusName) {
     if(program.workflowStatus) {
 
       getSystemStates(accessapi).then((states) => {
-
 
         var workflowState = states.find((i) => { 
           return program.workflowStatus.toUpperCase() == i.stateName.toUpperCase(); 
@@ -88,7 +83,7 @@ function getSystemStates(accessapi) {
 
 main = function() {
 
-    cli_util.status("Routing '%s' to status '%s'.", program.assetPath, program.workflowStatus);    
+    status.info("Routing '%s' to status '%s'.", program.assetPath, program.workflowStatus);    
 
     var accessapi = require('../index');
 
@@ -106,13 +101,13 @@ main = function() {
               var resp = resp2.getBody();
               
               if(resp.exists !== true) {
-                cli_util.fail("asset '%s' was not found.", program.assetPath);
+                status.fail("asset '%s' was not found.", program.assetPath);
                 process.exit(1);
               }
 
               log.debug('assetroute');
               accessapi.AssetRoute({"assetId":resp.assetId, "stateId":workflowState.stateId}).then((resp2)=> {
-                cli_util.status("succeeded routing '%s' to status '%s'", program.assetPath, program.workflowStatus);
+                status.info("Succeeded routing '%s' to status '%s'", program.assetPath, program.workflowStatus);
               });
 
             });
