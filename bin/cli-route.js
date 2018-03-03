@@ -32,55 +32,58 @@ program
   .parse(process.argv)
 
 function getSystemState(accessapi, workflowStatusName) { 
-  var deferred = Q.defer();
+  
+  return new Promise((resolve,reject)=>{
 
-  if(program.workflowStatus) {
-    getSystemStates(accessapi).done((states) => {
+    if(program.workflowStatus) {
 
-      var workflowState = states.find((i) => { 
-        return program.workflowStatus.toUpperCase() == i.stateName.toUpperCase(); 
+      getSystemStates(accessapi).then((states) => {
+
+
+        var workflowState = states.find((i) => { 
+          return program.workflowStatus.toUpperCase() == i.stateName.toUpperCase(); 
+        });
+
+        if(workflowState !== undefined) {
+            resolve(workflowState);
+        } else {
+            reject(new Error(util.format("could not find a state named '%s' in the system.", program.workflowStatus))); 
+        }
+
       });
+    }
 
-      if(workflowState !== undefined) {
-          deferred.resolve(workflowState);
-      } else {
-          deferred.reject(new Error("could not find a state named '%s' in the system.", program.workflowStatus)); 
-      }
-
-    });
-  }
-
-  return deferred.promise;
+  });
 }
 
 function getSystemStates(accessapi) {
-    var deferred = Q.defer();
+  
+  return new Promise((resolve,reject)=>{
 
-    log.debug('getSystemStates');
-    accessapi.AssetExists("/System/States").done((resp2)=>{
-        var resp = resp2.json;
-        
-        if(resp.exists !== true) {
-            log.error('failed to get list on /System/States');
-            deferred.reject(new Error('/System/States not found.'));
-        }
+    accessapi.AssetExists("/System/States").then((resp2)=>{
+      var resp = resp2.json;
+      
+      if(resp.exists !== true) {
+          log.error('failed to get list on /System/States');
+          reject(new Error('/System/States not found.'));
+      }
 
-        accessapi.AssetPaged({"assetId":resp.assetId}).done((resp2)=>{
-            var resp = resp2.json;
+      accessapi.AssetPaged({"assetId":resp.assetId}).then((resp2)=>{
+          var resp = resp2.json;
 
-            var states = resp.assets.reduce((accumulator,value) => {
-                if(value.type === 2) {//only push assets (type=2)
-                    accumulator.push({"stateName":value.label, "stateId":value.id});
-                }
-                return accumulator;
-            }, []);
+          var states = resp.assets.reduce((accumulator,value) => {
+              if(value.type === 2) {//only push assets (type=2)
+                  accumulator.push({"stateName":value.label, "stateId":value.id});
+              }
+              return accumulator;
+          }, []);
 
-            deferred.resolve(states);
-        });
+          resolve(states);
+      });
 
     });
 
-    return deferred.promise;
+  });
 }
 
 main = function() {
@@ -95,11 +98,11 @@ main = function() {
     accessapi.loadConfig(loadConfigOpts);
 
     log.debug('auth');
-    accessapi.auth().done(()=>{
+    accessapi.auth().then(()=>{
 
-        getSystemState(accessapi, program.workflowStatus).done((workflowState) => {
+        getSystemState(accessapi, program.workflowStatus).then((workflowState) => {
 
-            accessapi.AssetExists(program.assetPath).done((resp2)=>{
+            accessapi.AssetExists(program.assetPath).then((resp2)=>{
               var resp = resp2.getBody();
               
               if(resp.exists !== true) {
