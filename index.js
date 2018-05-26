@@ -255,6 +255,17 @@ AssetRoute = function (AssetRouteRequest, callback) {
   return restPost('/asset/Route', body, callback);
 }
 
+AssetBranch = function(id) {
+  var body = {};
+  var idParam;
+
+  if(typeof(id) === 'number') {
+    idParam = id;
+  }
+
+  return restPost(`/asset/Branch/${idParam}`, body);
+}
+
 function setConfig(config) {
   for (var k in config) {
     opts[k] = config[k];
@@ -335,5 +346,6 @@ module.exports = {
   AssetPaged: AssetPaged,
   AssetRoute: AssetRoute,
   AssetFields: AssetFields,
+  AssetBranch: AssetBranch,
   logger: log
 }
