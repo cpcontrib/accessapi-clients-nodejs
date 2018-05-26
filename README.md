@@ -1,4 +1,7 @@
 # crownpeak-accessapi for NodeJS
+
+[![npm](https://img.shields.io/npm/v/crownpeak-accessapi.svg)](https://www.npmjs.com/package/crownpeak-accessapi)
+
 CrownPeak AccessAPI interface for NodeJS
 
 Easy to install via npm:
