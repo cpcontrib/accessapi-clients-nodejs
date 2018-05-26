@@ -16,14 +16,17 @@ $ crownpeak route "/Test" Live  # routes asset named 'Test' in the root folder '
 ```
 
 Current set of commands on the CLI:
+- init
 - list
 - update
 - route
+- branch
 
 Current set of commands available in NodeJS via require('crownpeak-accessapi')
 - AuthenticateAuth
 - AssetExists
 - AssetPaged
 - AssetRoute
+- AssetBranch
 
 See [wiki](https://github.com/crownpeak-contrib/accessapi-clients-nodejs/wiki) for more information
