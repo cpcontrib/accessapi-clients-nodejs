@@ -1,14 +1,14 @@
 # crownpeak-accessapi for NodeJS
 CrownPeak AccessAPI interface for NodeJS
 
-Easy to install via npm: [note: not published yet]
+Easy to install via npm:
 ```
-npm install -g crownpeak-accessapi
+npm install crownpeak-accessapi
 ```
 
 Includes command line interface when installed
 ```
-$ npm install -g crownpeak-accessapi
+$ npm install -g crownpeak-accessapi #installed globally
 $ crownpeak init       # first step, initialize an accessapi-config.json file, includes API key and credentials for a user
 $ crownpeak list "/"  # list contents of root folder
 $ echo -n Welcome | crownpeak update /Test --field=body  # opens asset "/Test" and updates the body field to "Welcome"
