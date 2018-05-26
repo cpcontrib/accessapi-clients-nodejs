@@ -74,7 +74,8 @@ let main = function (program) {
 
   var fname = path.join(process.cwd(), program.config);
   if(fs.existsSync(fname) === false) {
-    throw util.format('Config file named \'%s\' was not found.', program.config);
+    //throw util.format('Config file named \'%s\' was not found.', program.config);
+    currentValues = {};
   } else {
     currentValues = JSON.parse(fs.readFileSync(fname, { encoding:"utf8" }));
   }
