@@ -16,7 +16,7 @@ program
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')
   .command('list','list contents of a folder')
-  .command('retrieve','retrieve content from an asset')
+  .command('get','retrieve content from an asset')
   .command('route', 'routing and publishing')
   .command('branch', 'branching')
   .parse(process.argv);
