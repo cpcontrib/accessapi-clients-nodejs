@@ -4,6 +4,7 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "node",
             "request": "launch",
@@ -22,9 +23,16 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "cli retrieve '/Arbor Memorial/_Web/Web.config'",
-            "program": "${workspaceFolder}/bin/cli-retrieve.js",
-            "args": ["/Arbor Memorial/en/Branches/sample/Obituaries","-f","basic_cta_background_color"]
+            "name": "cli update '/System/Scripts/Release'",
+            "program": "${workspaceFolder}/bin/cli-update.js",
+            "args": ["/System/Scripts/Release","--runPostSave"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "cli get 362847 -f body",
+            "program": "${workspaceFolder}/bin/cli-get.js",
+            "args": ["362847","-f","body"]
         },
         {
             "type": "node",

@@ -3,6 +3,9 @@ var fs = require('fs');
 var chalk = require('chalk');
 var util = require('util');
 
+var AccessApi = require('../index');
+var config_util = require('../lib/config-util');
+
 var log = log4js.getLogger('crownpeak-cli');
 function createLogger() {
   return log;
@@ -12,23 +15,25 @@ statusImpl = function() {
 
   var chalkError = chalk.red;
   var chalkWarn = chalk.yellow;
+  var options = {
+    verbose: false,
+    quiet: false
+  };
+}
 
+statusImpl.prototype.configure = function(options) {
+  this.options.verbose = options.verbose || false;
+  this.options.quiet = options.quiet || false;
 }
 
 statusImpl.prototype.write = function(text) {
   return text;
 }
 
-statusImpl.prototype.options = {
-  verbose: false,
-  quiet: false
-};
-
 /// writes banner to stdout when quiet==false
 statusImpl.prototype.banner = function(stream) {
   if(this.options.quiet !== true) {
     //inform('\nCrownPeak AccessAPI CLI\n\n');
-    stream.write('\n');
     stream.write('CrownPeak AccessAPI CLI\n');
     stream.write('\n');
   }
@@ -44,6 +49,9 @@ statusImpl.prototype.inform = function(text) {
     process.stdout.write('\n');
   }
 }
+
+
+statusImpl.prototype.verbose = statusImpl.prototype.inform;
 
 /// writes info message to stdout and to logs
 statusImpl.prototype.info = function(text) {
@@ -86,6 +94,8 @@ statusImpl.prototype.error = function(text) {
   process.stderr.write('\n');
 }
 
+statusImpl.prototype.fail = statusImpl.prototype.error;
+
 var statusSingleton = new statusImpl();
 
 asListFunction = function(val) {
@@ -97,9 +107,43 @@ var constants = {
   configJsonName: "accessapi-config.json"
 };
 
+var getCachedSystemStates = function(accessApiConnection) {
+  var appDataBase = process.env.LOCALAPPDATA || "";
+
+  return new Promise((resolve,reject) => {
+    resolve();
+  })
+}
+
+var findAccessApiConfig = function(program) {
+  program = program || {};
+  var accessApiConfig = AccessApi.loadAccessApiConfig(program.config, program.instance);
+
+  statusSingleton.verbose(`Instance: ${accessApiConfig.instance}`);
+  statusSingleton.verbose(`Login as: ${accessApiConfig.username}`);
+
+  return accessApiConfig;
+}
+
+var addCommonOptions = function(program) {
+  
+  program
+    .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
+    .option('-i,--instance <instance>', 'instance (required if multiple instances defined in the config file)')
+    .option('--stdin', 'read input from stdin', null, true)
+    .option('--verbose', 'increase output')
+    .option('--quiet', 'quiet output')
+
+  return program;
+
+}
+
+
 module.exports = {
     createLogger: createLogger,
     status: statusSingleton,
     asList: asListFunction,
-    constants: constants
+    constants: constants,
+    addCommonOptions: addCommonOptions,
+    findAccessApiConfig: findAccessApiConfig
 };

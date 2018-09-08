@@ -4,12 +4,17 @@ var program = require('commander');
 var prompt = require('prompt');
 var fs = require('fs');
 var util = require('util');
+var accessapi = require('../index');
 
 var cli_util = require('./cli_util');
 var log = cli_util.createLogger();
 
 //process.on('exit', () => { process.exit(0); })
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+});
 
 program
   .name('crownpeak get')
@@ -28,10 +33,9 @@ program
 
 program
   .parse(process.argv)
-
 handleOutput = function(program, resp, status, writer) {
   if(program["json"]==true) {
-    writer.write(JSON.stringify(resp.json.fields));
+    writer.write(JSON.stringify(resp.fields));
     return;
   }
   
@@ -40,9 +44,9 @@ handleOutput = function(program, resp, status, writer) {
     
     var obj = {};
     for(var j=0;j < fieldListArr.length;j++) {
-      for(var i=0;i < resp.json.fields.length; i++) {
-        if(fieldListArr[j] === '*' || resp.json.fields[i].name == fieldListArr[j]) {
-          obj[resp.json.fields[i].name] = resp.json.fields[i].value;
+      for(var i=0;i < resp.fields.length; i++) {
+        if(fieldListArr[j] === '*' || resp.fields[i].name == fieldListArr[j]) {
+          obj[resp.fields[i].name] = resp.fields[i].value;
         }
       }
     }
@@ -60,8 +64,8 @@ handleOutput = function(program, resp, status, writer) {
     return;
   } 
 
-  if(resp.json.fields.length == 1) {
-    writer.write(resp2.json.fields[0].value);
+  if(resp.fields.length == 1) {
+    writer.write(resp.fields[0].value);
     return;
   }
 }
@@ -71,31 +75,25 @@ main = function() {
   var status = cli_util.status;
   log.info("Retrieving asset 'crownpeak://%s%s'.", program.instance, program.assetPath);
 
-  var accessapi = require('../index');
+  var accessApiConfig = cli_util.findAccessApiConfig(program);
 
-  var loadConfigOpts = {};
-  loadConfigOpts.file = program.config;
-  loadConfigOpts.instance = program.instance;
-  accessapi.loadConfig(loadConfigOpts);
-
-  log.debug('auth');
-  accessapi.auth().then(()=>{
-
-    accessapi.AssetExists(program.assetPath).then((resp2)=>{
-      var resp = resp2.json;
-      
+  accessapi.authenticate(accessApiConfig).then((apiconn)=>{
+    log.debug('assetexists...');
+    
+    apiconn.AssetExists(program.assetPath).then((resp)=>{
+     
       if(resp.exists !== true) {
         status.error("Asset '%s' was not found.", program.assetPath);
         process.exit(1);
       }
 
-      if(log.isLevelEnabled("Info")) { log.info('Found asset: %s', JSON.stringify(resp2.json)); }
+      if(log.isLevelEnabled("Debug")) { log.debug('Found asset: %s', JSON.stringify(resp)); }
 
-      accessapi.AssetFields({"assetId":resp.assetId}).then((resp2)=>{
+      apiconn.AssetFields({"assetId":resp.assetId}).then((f_resp)=>{
         
-        if(log.isLevelEnabled("Debug")) { log.debug("Received response: %o", resp2); }
+        if(log.isLevelEnabled("Debug")) { log.debug("Received response: %o", f_resp); }
 
-        handleOutput(program, resp2, status, process.stdout)
+        handleOutput(program, f_resp, status, process.stdout)
 
       });
 

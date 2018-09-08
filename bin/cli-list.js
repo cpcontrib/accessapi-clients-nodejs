@@ -10,11 +10,6 @@ var log = cli_util.createLogger();
 
 //process.on('exit', () => { process.exit(0); })
 
-var constants = {
-  configJsonName: "accessapi-config.json"
-};
-
-
 program
   .name('crownpeak list')
 
@@ -129,15 +124,12 @@ main = function() {
 
   var accessapi = require('../index');
 
-  var loadConfigOpts = {};
-  loadConfigOpts.file = program.config;
-  loadConfigOpts.instance = program.instance;
-  accessapi.loadConfig(loadConfigOpts);
+  var accessApiConfig = cli_util.findAccessApiConfig(program);
 
   log.info("Listing contents of 'crownpeak://%s%s'.", program.instance, program.assetPath);    
 
   log.debug('auth');
-  accessapi.auth().then(()=>{
+  accessapi.authenticate(accessApiConfig).then(()=>{
 
     accessapi.AssetExists(program.assetPath).then((resp2)=>{
       var resp = resp2.json;

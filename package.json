@@ -26,7 +26,7 @@
     "commander": "^2.12.2",
     "keytar": "^4.1.0",
     "prompt": "^1.0.0",
-    "requestify": "^0.2.5"
+    "request-promise-native": "^1.0.5"
   },
   "optionalDependencies": {
     "log4js": "^2.5.3"

@@ -5,22 +5,23 @@ var prompt = require('prompt');
 var fs = require('fs');
 var util = require('util');
 var chalk = require('chalk');
+var accessapi = require('../index');
 
 var cli_util = require('./cli_util');
+var status = cli_util.status;
 var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
-
 program
   .name('update')
 
+cli_util.addCommonOptions(program) //adds config,instance,stdin
+
 program
-  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
-  .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
-  .option('--stdin', 'read input from stdin')
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .option('-f,--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
+  .option('-v,--value <value>', 'write a value to the specified field.  field must be specified.')
   .option('--runPostInput','run post input plugin for the asset\'s template', null, true)
   .option('--runPostSave', 'run post save plugin on the asset\'s template', null, true)
   .arguments("<assetPath> [inputFile]")
@@ -124,42 +125,40 @@ function getContentObject (program, encoding) {
   });
 }
 
-main = function () {
-
-var exitcode=-1;
+validateUsage = function(process) {
+  var exitcode=-1;
 
   if (typeof program.assetPath === 'undefined') {
-    cli_util.fail('no assetPath specified.');
+    status.fail('no assetPath specified.');
     exitcode=1;
   }
 
   if (program.inputFile == undefined && program.field == undefined && program.stdin == undefined) {
-    cli_util.fail('no inputFile specified and --stdin not specified.  Cannot update.');
+    status.fail('no inputFile specified and --stdin not specified.  Cannot update.');
     exitcode=1;
   }
 
-  if(exitcode>0) { program.help();process.exit(exitcode); }
-  
-  log.debug('Loading config from %s.', program.config);
-  if (fs.existsSync(program.config)==false) {
-    cli_util.fail('Failed to load config from %s: file doesn\'t exist.', program.config);
-    process.exit(1); 
+  if(program.value !== undefined && program.field == undefined) {
+    status.fail('value specified but no field specified with --field');
+    exitcode=1;
   }
 
-  //var reader = require('./accessapi-json-config-reader');
-  var accessapiConfig = JSON.parse(fs.readFileSync(program.config));
-  
-  log.debug('accessapiConfig:', accessapiConfig);
+  if(exitcode > 0) { 
+    program.help();
+    process.exit(exitcode); 
+  }
+}
 
-  cli_util.status(`Instance: ${accessapiConfig.instance}   Sign in as: ${accessapiConfig.username}`);
-  cli_util.status(`Updating: ${program.assetPath}`);
+main = function () {
+
+  validateUsage(process);
+  status.configure(program);
+
+  status.inform(`Updating: ${program.assetPath}`);
   
-  var accessapi = require('../index');
-  accessapi.setConfig(accessapiConfig);
-  
-  cli_util.status('');
-  cli_util.status('Authenticating.');
-  accessapi.auth().then(function (data) {
+  var accessApiConfig = cli_util.findAccessApiConfig(program);
+
+  accessapi.authenticate(accessApiConfig).then((accessapi) => {
     
     var assetIdOrPath = program.assetPath;
 
@@ -167,7 +166,7 @@ var exitcode=-1;
     accessapi.AssetExists(assetIdOrPath).then(function (existsResp) {
       
       //existsResp documented http://developer.crownpeak.com/Documentation/AccessAPI/AssetController/Methods/Exists(AssetExistsRequest).html
-      var workflowAssetId = existsResp.json.assetId;
+      var workflowAssetId = existsResp.assetId;
       
       getContentObject(program).then(function (contentObject) {
         
@@ -175,26 +174,23 @@ var exitcode=-1;
           log.debug('fieldsJson from getContent:', contentObject);
         }
 
-        var options={};
-        if(program.runPostInput != undefined)
-          options.runPostInput = program.runPostInput;
-
-        if(program.runPostSave != undefined)
-          options.runPostSave = program.runPostSave;
+        var options = {
+          runPostInput: (program.runPostInput || false),
+          runPostSave: (program.runPostSave || false)
+        };
 
         log.debug('calling AssetUpdate. options=%j', options);
+
+        status.inform('Performing update...');
+
         accessapi.AssetUpdate(workflowAssetId, contentObject, null, options).then(function() {
-          cli_util.status('Success updating %s.', program.assetPath);
+          status.inform('Success updating %s (%d).', program.assetPath, workflowAssetId);
         })
 
       });
 
     });
 
-  }, function(err) {
-    cli_util.fail('Authentication failure: %s', err.resultCode);
-  }).catch(function (err) {
-    log.error("error occurred:", err);
-  }).done();
+  });
 
 }();

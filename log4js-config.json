@@ -1,7 +1,11 @@
 {
   "appenders": {
     "stdout": {
-      "type": "stdout"
+      "type": "stdout",
+      "layout": {
+        "type": "pattern",
+        "pattern": "%[[%p]%] %m"
+      }
     }
   },
   "categories": {
