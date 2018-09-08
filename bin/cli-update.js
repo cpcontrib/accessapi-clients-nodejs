@@ -11,9 +11,6 @@ var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
-var constants = {
-  configJsonName: "accessapi-config.json"
-};
 
 program
   .name('update')
