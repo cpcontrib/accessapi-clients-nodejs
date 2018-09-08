@@ -36,16 +36,6 @@ if(program["json"]==true) {
   program["formatter"]="json";
 }
 
-
-function getSystemStates(accessapi) {
-    var deferred = Q.defer();
-
-    log.debug('getSystemStates');
-    
-
-    return deferred.promise;
-}
-
 function pad(pad, str, padLeft) {
   if (typeof str === 'undefined') 
     return pad;

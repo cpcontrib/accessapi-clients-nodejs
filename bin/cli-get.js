@@ -32,14 +32,6 @@ program
 program
   .parse(process.argv)
 
-function getSystemStates(accessapi) {
-    var deferred = Q.defer();
-
-    log.debug('getSystemStates');
-
-    return deferred.promise;
-}
-
 handleOutput = function(program, resp, status, writer) {
   if(program["json"]==true) {
     writer.write(JSON.stringify(resp.json.fields));
