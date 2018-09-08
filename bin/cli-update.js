@@ -40,90 +40,91 @@ log.debug('program.assetPath',program.assetPath);
 
 function getContentObject (program, encoding) {
   if (log.isDebugEnabled) log.debug('begin reading content');
-  var deferred = Q.defer();
-  var collector = Q.defer();
 
-  collector.promise.done((content)=> {
-    
-    if(Buffer.isBuffer(content) || typeof content === 'string') {
-      log.debug('content is buffer or string. program.field=%s', program.field);
-      if (program.field == undefined) {
-        fail('Content wasnt parseable as json, and no --field parameter specified.');
-        program.help();
-      }
-    }
+  return new Promise((resolve,reject) => {
 
-    if(Buffer.isBuffer(content)) {
-      fieldsJson = {};
-      fieldsJson[program.field] = content.toString('utf8');
-    }
-
-    if(typeof content === 'string') {
-      fieldsJson = {};
-      fieldsJson[program.field] = content;
-    }
-
-    if(typeof content === 'object') {
-      fieldsJson = content;
-    }
-
-    deferred.resolve(fieldsJson);
-  }, (err) => {
-    deferred.reject(err);
-  });
+    contentCollector = function(content) {
       
-  if (program.stdin) {
-    log.debug('reading content from stdin');
+      if(Buffer.isBuffer(content) || typeof content === 'string') {
+        log.debug('content is buffer or string. program.field=%s', program.field);
+        if (program.field == undefined) {
+          status.fail('Content wasnt parseable as json, and no --field parameter specified.');
+          program.help();
+        }
+      }
   
-    var stdin = process.stdin;
-    var stdout = process.stdout;
-    
-    var inputChunks = [];
-    
-    stdin.on('data', function (data) {
-      if (log.isDebugEnabled) log.debug('chunk:',data);
-      if (Buffer.isBuffer(data)) data = data.toString('utf8');
-      inputChunks.push(data);
-    });
-    
-    stdin.on('end', function () {
-      var contentStr = (inputChunks.length == 1 ? inputChunks[0] : inputChunks.join(""));
-      
-      try {
-        var parsedData = JSON.parse(contentStr);
-        collector.resolve(parsedData);
-        return;
+      if(Buffer.isBuffer(content)) {
+        fieldsJson = {};
+        fieldsJson[program.field] = content.toString('utf8');
       }
-      catch(ex) { }
-      
-      collector.resolve(contentStr);
-    });
+  
+      if(typeof content === 'string') {
+        fieldsJson = {};
+        fieldsJson[program.field] = content;
+      }
+  
+      if(typeof content === 'object') {
+        fieldsJson = content;
+      }
+  
+      resolve(fieldsJson);
+  
+    }
 
-  } else if(program.inputFile !== undefined) {
-    //read file name from program.args[2]
-    log.debug("reading from file='%s'." , program.inputFile);
+    if(program.value !== undefined && program.field !== undefined) {
+      contentCollector(program.value);
+    }
+
+    if (program.stdin) {
+      log.debug('reading content from stdin');
     
-    Q.nfcall(fs.readFile, program.inputFile, { 'encoding': 'utf8' }).then(function(res) {
+      var stdin = process.stdin;
+      var stdout = process.stdout;
+      
+      var inputChunks = [];
+      
+      stdin.on('data', function (data) {
+        if (log.isDebugEnabled) log.debug('chunk:',data);
+        if (Buffer.isBuffer(data)) data = data.toString('utf8');
+        inputChunks.push(data);
+      });
+      
+      stdin.on('end', function () {
+        var contentStr = (inputChunks.length == 1 ? inputChunks[0] : inputChunks.join(""));
+        
+        try {
+          var parsedData = JSON.parse(contentStr);
+          contentCollector(parsedData);
+          return;
+        }
+        catch(ex) { }
+        
+        contentCollector(contentStr);
+      });
+
+    } else if(program.inputFile !== undefined) {
+      //read file name from program.args[2]
+      log.debug("reading from file='%s'." , program.inputFile);
+      
+      var fileContent = fs.readFileSync(program.inputFile, { 'encoding': 'utf8' });
+      
       try {
-        var fields = JSON.parse(res);
-        collector.resolve(fields);
+        var fields = JSON.parse(fileContent);
+        contentCollector(fields);
       } catch(ex) {}
       
       if(fields === undefined) {
         fields = {};
-        fields[program.field] = res;
-        collector.resolve(fields);
+        fields[program.field] = fileContent;
+        contentCollector(fields);
       }
-    });
 
-  } else { //read from file
-    
-    cli_util.fail('field not set.');
-  }
-
+    } else { //read from file
+      
+      status.fail('field not set.');
+    }
   
-  
-  return deferred.promise;
+  });
 }
 
 main = function () {
