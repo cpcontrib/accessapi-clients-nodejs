@@ -13,19 +13,27 @@ var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
+var setvalues = {};
+collectSets = function(value) {
+  var split = value.split('=');
+  setvalues[split[0]] = split[1];
+}
+
 program
   .name('update')
 
 cli_util.addCommonOptions(program) //adds config,instance,stdin
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .option('-f,--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
-  .option('-v,--value <value>', 'write a value to the specified field.  field must be specified.')
+  .option('-v,--value [value]', 'write a value to the specified field.  field must be specified.')
+  .option('--set <setExpr>','set field=value, useful for reading in a file and overriding values', collectSets)
   .option('--runPostInput','run post input plugin for the asset\'s template', null, true)
   .option('--runPostSave', 'run post save plugin on the asset\'s template', null, true)
   .arguments("<assetPath> [inputFile]")
   .action(function (assetPath, inputFile) {
     program.assetPath = assetPath;
     program.inputFile = inputFile;
+    program.setvalues = setvalues;
   })
 
 program
@@ -36,48 +44,49 @@ status.configureOptions(program);
 log.debug('program.config',program.config);
 log.debug('program.assetPath',program.assetPath);
 
+function contentCollector(options, content) {
+      
+  if(Buffer.isBuffer(content) || typeof content === 'string') {
+    log.debug('content is buffer or string. program.field=%s', program.field);
+    if (options.field == undefined) {
+      status.fail('Content wasnt parseable as json, and no --field parameter specified.');
+      program.help();
+    }
+  }
+
+  if(Buffer.isBuffer(content)) {
+    fieldsJson = {};
+    fieldsJson[options.field] = content.toString('utf8');
+  }
+
+  if(typeof content === 'string') {
+    fieldsJson = {};
+    fieldsJson[options.field] = content;
+  }
+
+  if(typeof content === 'object') {
+    fieldsJson = content;
+  }
+
+  if(options.setvalue !== null) {
+    fieldsJson = Object.assign(fieldsJson, options.setvalues);
+  }
+
+  return fieldsJson;
+
+}
+
 function getContentObject (program, encoding) {
   if (log.isDebugEnabled) log.debug('begin reading content');
 
+
+
   return new Promise((resolve,reject) => {
-
-    contentCollector = function(content) {
-      
-      if(Buffer.isBuffer(content) || typeof content === 'string') {
-        log.debug('content is buffer or string. program.field=%s', program.field);
-        if (program.field == undefined) {
-          status.fail('Content wasnt parseable as json, and no --field parameter specified.');
-          program.help();
-        }
-      }
-  
-      if(Buffer.isBuffer(content)) {
-        fieldsJson = {};
-        fieldsJson[program.field] = content.toString('utf8');
-      }
-  
-      if(typeof content === 'string') {
-        fieldsJson = {};
-        fieldsJson[program.field] = content;
-      }
-  
-      if(typeof content === 'object') {
-        fieldsJson = content;
-      }
-  
-      resolve(fieldsJson);
-  
-    }
-
-    if(program.value !== undefined && program.field !== undefined) {
-      contentCollector(program.value);
-    }
 
     if (program.stdin) {
       log.debug('reading content from stdin');
     
       var stdin = process.stdin;
-      var stdout = process.stdout;
       
       var inputChunks = [];
       
@@ -92,12 +101,10 @@ function getContentObject (program, encoding) {
         
         try {
           var parsedData = JSON.parse(contentStr);
-          contentCollector(parsedData);
-          return;
-        }
-        catch(ex) { }
+          resolve(contentCollector(program, parsedData));
+        } catch(e) { /* deliberate */ }
         
-        contentCollector(contentStr);
+        resolve(contentCollector(program, contentStr));
       });
 
     } else if(program.inputFile !== undefined) {
@@ -108,24 +115,24 @@ function getContentObject (program, encoding) {
       
       try {
         var fields = JSON.parse(fileContent);
-        contentCollector(fields);
-      } catch(ex) {}
+        resolve(contentCollector(fields));
+      } catch(e) { /*deliberate*/ }
       
       if(fields === undefined) {
         fields = {};
         fields[program.field] = fileContent;
-        contentCollector(fields);
+        resolve(contentCollector(fields));
       }
 
     } else { //read from file
       
-      status.fail('field not set.');
+      reject('--field not set.');
     }
   
   });
 }
 
-validateUsage = function(process) {
+validateUsage = function(program,process) {
   var exitcode=-1;
 
   if (typeof program.assetPath === 'undefined') {
@@ -151,46 +158,49 @@ validateUsage = function(process) {
 
 main = function () {
 
-  validateUsage(process);
-  status.configure(program);
+  try
+  {
+    validateUsage(program,process);
+    status.configureOptions(program);
 
-  status.inform(`Updating: ${program.assetPath}`);
-  
-  var accessApiConfig = cli_util.findAccessApiConfig(program);
-
-  accessapi.authenticate(accessApiConfig).then((accessapi) => {
+    status.inform(`Updating: ${program.assetPath}`);
     
-    var assetIdOrPath = program.assetPath;
+    var accessApiConfig = cli_util.findAccessApiConfig(program);
 
-    log.debug('calling AssetExists');
-    accessapi.AssetExists(assetIdOrPath).then(function (existsResp) {
+    accessapi.authenticate(accessApiConfig).then((accessapi) => {
       
-      //existsResp documented http://developer.crownpeak.com/Documentation/AccessAPI/AssetController/Methods/Exists(AssetExistsRequest).html
-      var workflowAssetId = existsResp.assetId;
-      
-      getContentObject(program).then(function (contentObject) {
+      var assetIdOrPath = program.assetPath;
+
+      log.debug('calling AssetExists');
+      accessapi.AssetExists(assetIdOrPath).then(function (existsResp) {
         
-        if(log.isDebugEnabled) {
-          log.debug('fieldsJson from getContent:', contentObject);
-        }
+        //existsResp documented http://developer.crownpeak.com/Documentation/AccessAPI/AssetController/Methods/Exists(AssetExistsRequest).html
+        var workflowAssetId = existsResp.assetId;
+        
+        getContentObject(program).then(function (contentObject) {
+          
+          if(log.isDebugEnabled) {
+            log.debug('contentObject from getContent:', contentObject);
+          }
 
-        var options = {
-          runPostInput: (program.runPostInput || false),
-          runPostSave: (program.runPostSave || false)
-        };
+          var options = {
+            runPostInput: (program.runPostInput || false),
+            runPostSave: (program.runPostSave || false)
+          };
 
-        log.debug('calling AssetUpdate. options=%j', options);
+          log.debug('calling AssetUpdate. options=%j', options);
 
-        status.inform('Performing update...');
+          accessapi.AssetUpdate(workflowAssetId, contentObject, null, options).then(function() {
+            status.inform('Success updating %s (%d).', program.assetPath, workflowAssetId);
+          })
 
-        accessapi.AssetUpdate(workflowAssetId, contentObject, null, options).then(function() {
-          status.inform('Success updating %s (%d).', program.assetPath, workflowAssetId);
-        })
+        });
 
       });
 
     });
-
-  });
+  } catch(e) {
+    console.error('Error: ',e)
+  }
 
 }();
