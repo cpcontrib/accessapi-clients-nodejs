@@ -23,9 +23,9 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "cli update '/System/Scripts/Release'",
+            "name": "cli update '/System/Scripts/Codesync'",
             "program": "${workspaceFolder}/bin/cli-update.js",
-            "args": ["/System/Scripts/Release","--runPostSave"]
+            "args": ["/System/Scripts/Codesync","--runPostSave","--field=modified_since","--value="]
         },
         {
             "type": "node",
