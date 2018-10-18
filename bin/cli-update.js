@@ -17,8 +17,6 @@ program
   .name('update')
 
 cli_util.addCommonOptions(program) //adds config,instance,stdin
-
-program
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .option('-f,--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
   .option('-v,--value <value>', 'write a value to the specified field.  field must be specified.')
@@ -32,6 +30,8 @@ program
 
 program
   .parse(process.argv)
+
+status.configureOptions(program);
 
 log.debug('program.config',program.config);
 log.debug('program.assetPath',program.assetPath);

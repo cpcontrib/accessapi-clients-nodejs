@@ -4,14 +4,18 @@ var program = require('commander');
 var packagejson = require('../package.json');
 var status = require('./cli_util').status;
 
+process.on('unhandledRejection', (reason, p) => {
+  console.log('Unhandled Rejection at: Promise', p, 'reason:', reason);
+  // application specific logging, throwing an error, or other logic here
+});
+
 program
   .name('crownpeak')
   .version(packagejson.version, '--version')
   .option('-v, --verbose','verbose output',false)
   .option('-q, --quiet','quiet output',false)
   .action(()=>{
-    status.options.verbose = program.verbose;
-    status.options.quiet = program.quiet;
+    status.configureOptions({verbose:program.verbose,quiet:program.quiet});
   })
   .command('init', 'initialize a config for using the AccessAPI')
   .command('update', 'update an asset')

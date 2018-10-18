@@ -15,7 +15,7 @@ var log = log4js.getLogger('crownpeak-cli');
 
 program
   .name('init')
-  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json', constants.configJsonName)
+  .option('--config <file>', 'specify a config file to use.', constants.configJsonName)
 
 program
   .parse(process.argv)

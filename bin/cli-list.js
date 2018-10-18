@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 var program = require('commander');
-var prompt = require('prompt');
-var fs = require('fs');
 var util = require('util');
 
+var accessapi = require('../index');
 var cli_util = require('./cli_util');
+var status = cli_util.status;
 var log = cli_util.createLogger();
 
 //process.on('exit', () => { process.exit(0); })
@@ -13,9 +13,7 @@ var log = cli_util.createLogger();
 program
   .name('crownpeak list')
 
-program
-  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
-  .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
+cli_util.addCommonOptions(program)
   //.option('--recursive','route', false)
   .option('--json', 'output as raw json')
   .option('-f,--formatter <formatter>', 'use a specific formatter.  valid options are [json|dosdir|default]', null, "default")
@@ -26,6 +24,8 @@ program
 
 program
   .parse(process.argv)
+
+status.configureOptions(program);
 
 if(program["json"]==true) {
   program["formatter"]="json";
@@ -120,27 +120,22 @@ function getFormatter(program, formatters, status) {
 
 main = function() {
 
-  var status = cli_util.status;
-
-  var accessapi = require('../index');
-
   var accessApiConfig = cli_util.findAccessApiConfig(program);
 
   log.info("Listing contents of 'crownpeak://%s%s'.", program.instance, program.assetPath);    
 
   log.debug('auth');
-  accessapi.authenticate(accessApiConfig).then(()=>{
+  accessapi.authenticate(accessApiConfig).then((accessapi)=>{
 
-    accessapi.AssetExists(program.assetPath).then((resp2)=>{
-      var resp = resp2.json;
+    accessapi.AssetExists(program.assetPath).then((resp)=>{
       
       if(resp.exists !== true) {
         status.error("folder '%s' was not found.", program.assetPath);
         process.exit(1);
       }
 
-      accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":200}).then((resp2)=>{
-        var resp = resp2.json;
+      accessapi.AssetPaged({"assetId":resp.assetId,"pageSize":300}).then((resp)=>{
+        
         var formatter = getFormatter(program, formatters, status);
 
         if(formatter !== undefined) {

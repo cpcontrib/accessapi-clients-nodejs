@@ -19,9 +19,7 @@ process.on('unhandledRejection', (reason, p) => {
 program
   .name('crownpeak get')
 
-program
-  .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
-  .option('-i,--instance', 'instance (required if multiple instances defined in the config file)')
+cli_util.addCommonOptions(program)
   //.option('--recursive','route', false)
   .option('--json', 'output as json')
   .option('-f, --fields <list>', 'comma separated list of fields to output. specifying exactly one field will get the field value, more than one will turn on json output.', cli_util.asList, [])
