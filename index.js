@@ -18,15 +18,14 @@ class AccessApi {
     log.debug("configFileSpec=%s", configFileSpec);
 
     if (fs.existsSync(configFileSpec)==false) {
-      var msg = util.format('Failed to load accessApi config from %s: file doesnt exist.', configFileSpec);;
-      throw msg;
+      throw new Error(util.format('Failed to load accessApi config from %s: file doesnt exist.', configFileSpec));
     }
 
     //var reader = require('./accessapi-json-config-reader');
     var accessapiConfig = JSON.parse(fs.readFileSync(configFileSpec));
 
     if(Array.isArray(accessapiConfig)) {
-      throw 'array of instance, not implemented yet.';
+      throw new Error('array of instance, not implemented yet.');
     }
     
     log.debug('loaded file %s', configFileSpec);
