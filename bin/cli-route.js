@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 var program = require('commander');
-var prompt = require('prompt');
-var fs = require('fs');
 var util = require('util');
 var chalk = require('chalk');
+var accessapi = require('../index');
 
-var status = require('./cli_util').status;
-var log = require('./cli_util').createLogger();
+var cli_util = require('./cli_util');
+var status = cli_util.status;
+var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
@@ -18,31 +18,33 @@ program
   .option('--config <file>', 'a config file to use. defaults to looking for accessapi-config.json')
   .option('-i,--instance <instance>', 'instance (required if multiple instances defined in the config file)')
   //.option('--recursive','route', false)
-  .arguments("<assetPath> <workflowStatus>")
-  .action(function (assetPath, workflowStatus) {
+  .arguments("<assetPath> <status>")
+  .action(function (assetPath, status) {
     program.assetPath = assetPath;
-    program.workflowStatus = workflowStatus;
+    program.status = status;
   })
 
 program
   .parse(process.argv)
 
-function getSystemState(accessapi, workflowStatusName) { 
+function getSystemState(accessapi, status) { 
   
   return new Promise((resolve,reject)=>{
 
-    if(program.workflowStatus) {
+    if(program.status) {
 
       getSystemStates(accessapi).then((states) => {
 
+        var test_statusName = program.status.toUpperCase();
+
         var workflowState = states.find((i) => { 
-          return program.workflowStatus.toUpperCase() == i.stateName.toUpperCase(); 
+          return test_statusName == i.stateName.toUpperCase(); 
         });
 
         if(workflowState !== undefined) {
-            resolve(workflowState);
+          resolve(workflowState);
         } else {
-            reject(new Error(util.format("could not find a state named '%s' in the system.", program.workflowStatus))); 
+          reject(util.format("could not find a state named '%s' in the system.", program.workflowStatus)); 
         }
 
       });
@@ -55,25 +57,23 @@ function getSystemStates(accessapi) {
   
   return new Promise((resolve,reject)=>{
 
-    accessapi.AssetExists("/System/States").then((resp2)=>{
-      var resp = resp2.json;
+    accessapi.AssetExists("/System/States").then((resp)=>{
       
       if(resp.exists !== true) {
           log.error('failed to get list on /System/States');
           reject(new Error('/System/States not found.'));
       }
 
-      accessapi.AssetPaged({"assetId":resp.assetId}).then((resp2)=>{
-          var resp = resp2.json;
+      accessapi.AssetPaged({"assetId":resp.assetId}).then((resp)=>{
 
-          var states = resp.assets.reduce((accumulator,value) => {
-              if(value.type === 2) {//only push assets (type=2)
-                  accumulator.push({"stateName":value.label, "stateId":value.id});
-              }
-              return accumulator;
-          }, []);
+        var states = resp.assets.reduce((accumulator,value) => {
+            if(value.type === 2) {//only push assets (type=2)
+                accumulator.push({"stateName":value.label, "stateId":value.id});
+            }
+            return accumulator;
+        }, []);
 
-          resolve(states);
+        resolve(states);
       });
 
     });
@@ -83,37 +83,41 @@ function getSystemStates(accessapi) {
 
 main = function() {
 
-    status.info("Routing '%s' to status '%s'.", program.assetPath, program.workflowStatus);    
+  try
+  {
+    //validateUsage(program,process);
+    status.configureOptions(program);
 
-    var accessapi = require('../index');
+    status.info("Routing '%s' to status '%s'.", program.assetPath, program.status);    
 
-    var loadConfigOpts = {};
-    loadConfigOpts.file = program.config;
-    loadConfigOpts.instance = program.instance;
-    accessapi.loadConfig(loadConfigOpts);
+    var accessApiConfig = cli_util.findAccessApiConfig(program);
 
-    log.debug('auth');
-    accessapi.auth().then(()=>{
+    accessapi.authenticate(accessApiConfig).then((accessapi) => {
 
-        getSystemState(accessapi, program.workflowStatus).then((workflowState) => {
+      getSystemState(accessapi, program.status).then((workflowState) => {
 
-            accessapi.AssetExists(program.assetPath).then((resp2)=>{
-              var resp = resp2.getBody();
-              
-              if(resp.exists !== true) {
-                status.fail("asset '%s' was not found.", program.assetPath);
-                process.exit(1);
-              }
+        accessapi.AssetExists(program.assetPath)
+        .then((resp) => {
 
-              log.debug('assetroute');
-              accessapi.AssetRoute({"assetId":resp.assetId, "stateId":workflowState.stateId}).then((resp2)=> {
-                status.info("Succeeded routing '%s' to status '%s'", program.assetPath, program.workflowStatus);
-              });
+          if(resp.exists !== true) {
+            reject(util.format("fail Asset '%s' was not found.", program.assetPath));
+          } else {
 
+            accessapi.AssetRoute({"assetId":resp.assetId, "stateId":workflowState.stateId})
+            .then((resp2) => {
+              status.info(chalk.green(" ok  ") + "Routed '%s' to status '%s'", program.assetPath, program.status);
             });
 
-        })
+          }
+
+        }).catch(error => { status.warn(error); return error; });
+
+      })
 
     });
+  
+  } catch(e) {
+    console.error('Error: ',e);
+  }
 
 }();

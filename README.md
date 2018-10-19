@@ -12,7 +12,7 @@ $ npm install -g crownpeak-accessapi #installed globally
 $ crownpeak init       # first step, initialize an accessapi-config.json file, includes API key and credentials for a user
 $ crownpeak list "/"  # list contents of root folder
 $ echo -n Welcome | crownpeak update /Test --field=body  # opens asset "/Test" and updates the body field to "Welcome"
-$ crownpeak route "/Test" Live  # routes asset named 'Test' in the root folder '/' to Live workflow status
+$ crownpeak route Live "/Test" 1234  # routes asset named 'Test' and an asset with id=1234 in the root folder '/' to Live
 ```
 
 Current set of commands on the CLI:

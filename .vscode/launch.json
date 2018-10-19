@@ -37,6 +37,13 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "cli route Live '/System/Scripts/Test'",
+            "program": "${workspaceFolder}/bin/cli-route.js",
+            "args": ["Live","/System/Scripts/Test"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "Launch Program",
             "program": "${workspaceFolder}\\index.js"
         }
