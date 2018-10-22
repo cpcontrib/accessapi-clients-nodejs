@@ -68,11 +68,12 @@ function contentCollector(options, content) {
     fieldsJson = content;
   }
 
-  if(options.setvalue !== null) {
+  if(Object.keys(options.setvalues).length > 0) {
+    fieldsJson = fieldsJson || {};
     fieldsJson = Object.assign(fieldsJson, options.setvalues);
   }
 
-  return fieldsJson;
+  return fieldsJson || {};
 
 }
 
@@ -107,26 +108,37 @@ function getContentObject (program, encoding) {
         resolve(contentCollector(program, contentStr));
       });
 
-    } else if(program.inputFile !== undefined) {
+    } else if(program.inputFile) {
       //read file name from program.args[2]
       log.debug("reading from file='%s'." , program.inputFile);
       
       var fileContent = fs.readFileSync(program.inputFile, { 'encoding': 'utf8' });
       
+      var fields;
+
       try {
         var fields = JSON.parse(fileContent);
-        resolve(contentCollector(fields));
+        resolve(contentCollector(program, fields));
       } catch(e) { /*deliberate*/ }
       
+      //assign entire file contents to --field
       if(fields === undefined) {
         fields = {};
         fields[program.field] = fileContent;
-        resolve(contentCollector(fields));
+        resolve(contentCollector(program, fields));
       }
 
-    } else { //read from file
+    } else { 
       
-      reject('--field not set.');
+      if(Object.keys(program.setvalues).length > 0) {
+        var fields = {};
+        resolve(contentCollector(program, fields));
+      }
+      else
+      {
+        reject(new Error('not implemented'));
+      }
+
     }
   
   });
@@ -140,7 +152,7 @@ validateUsage = function(program,process) {
     exitcode=1;
   }
 
-  if (program.inputFile == undefined && program.field == undefined && program.stdin == undefined) {
+  if (program.inputFile == undefined && program.field == undefined && Object.keys(program.setvalues).length == 0 && program.stdin == undefined) {
     status.fail('no inputFile specified and --stdin not specified.  Cannot update.');
     exitcode=1;
   }
