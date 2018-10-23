@@ -30,6 +30,13 @@
         {
             "type": "node",
             "request": "launch",
+            "name": "cli update '/System/Scripts/Test'",
+            "program": "${workspaceFolder}/bin/cli-update.js",
+            "args": ["/System/Scripts/Test","--runPostSave","--set","abc=123"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
             "name": "cli get 362847 -f body",
             "program": "${workspaceFolder}/bin/cli-get.js",
             "args": ["362847","-f","body"]
