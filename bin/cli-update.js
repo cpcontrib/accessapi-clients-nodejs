@@ -13,10 +13,11 @@ var log = cli_util.createLogger();
 
 process.on('exit', () => { process.exit(0); })
 
-var setvalues = {};
-collectSets = function(value) {
-  var split = value.split('=');
+collectSetValues = function(setExpr, setvalues) {
+  var split = setExpr.split('=');
+  setvalues = setvalues || {};
   setvalues[split[0]] = split[1];
+  return setvalues;
 }
 
 program
@@ -26,18 +27,20 @@ cli_util.addCommonOptions(program) //adds config,instance,stdin
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .option('-f,--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
   .option('-v,--value [value]', 'write a value to the specified field.  field must be specified.')
-  .option('--set <setExpr>','set field=value, useful for reading in a file and overriding values', collectSets)
+  .option('-s,--set <setExpr>','set field=value[&field2=value2&...], useful for reading in a file and overriding values', collectSetValues)
   .option('--runPostInput','run post input plugin for the asset\'s template', null, true)
   .option('--runPostSave', 'run post save plugin on the asset\'s template', null, true)
   .arguments("<assetPath> [inputFile]")
   .action(function (assetPath, inputFile) {
     program.assetPath = assetPath;
     program.inputFile = inputFile;
-    program.setvalues = setvalues;
   })
 
 program
   .parse(process.argv)
+
+//ensure an empty object at least for subsequent Object.keys checks
+program.set = program.set || {};
 
 status.configureOptions(program);
 
@@ -68,9 +71,9 @@ function contentCollector(options, content) {
     fieldsJson = content;
   }
 
-  if(Object.keys(options.setvalues).length > 0) {
+  if(Object.keys(options.set).length > 0) {
     fieldsJson = fieldsJson || {};
-    fieldsJson = Object.assign(fieldsJson, options.setvalues);
+    fieldsJson = Object.assign(fieldsJson, options.set);
   }
 
   return fieldsJson || {};
@@ -130,7 +133,7 @@ function getContentObject (program, encoding) {
 
     } else { 
       
-      if(Object.keys(program.setvalues).length > 0) {
+      if(Object.keys(program.set).length > 0) {
         var fields = {};
         resolve(contentCollector(program, fields));
       }
@@ -152,7 +155,7 @@ validateUsage = function(program,process) {
     exitcode=1;
   }
 
-  if (program.inputFile == undefined && program.field == undefined && Object.keys(program.setvalues).length == 0 && program.stdin == undefined) {
+  if (program.inputFile == undefined && program.field == undefined && Object.keys(program.set).length == 0 && program.stdin == undefined) {
     status.fail('no inputFile specified and --stdin not specified.  Cannot update.');
     exitcode=1;
   }
