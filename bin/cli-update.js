@@ -26,7 +26,6 @@ program
 cli_util.addCommonOptions(program) //adds config,instance,stdin
   .option('-b', 'assume binary when reading, will force writing a binary asset in CrownPeak.')
   .option('-f,--field <field>', 'update using a specific field name, use when updating from a file or stdin without json')
-  .option('-v,--value [value]', 'write a value to the specified field.  field must be specified.')
   .option('-s,--set <setExpr>','set field=value[&field2=value2&...], useful for reading in a file and overriding values', collectSetValues)
   .option('--runPostInput','run post input plugin for the asset\'s template', null, true)
   .option('--runPostSave', 'run post save plugin on the asset\'s template', null, true)
